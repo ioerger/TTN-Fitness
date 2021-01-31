@@ -1,0 +1,8 @@
+# TAInsertionPreferences
+
+1. python compute_LFCs.py <genome.fna> <counts.wig>(with 1 or more wig files) > LFCs.txt
+2. python3 LFCs_to_TTN.py LFCs.txt > TTN.csv
+   python3 LFCs_to_oneHotEncoded.py LFCs.txt > oneHotEncoded.csv
+3. python3 STLM_train.py TTN.csv model.pickle(to save model to, will create tar file)
+4. python3 STLM_test.py model.pickle trainTTN.csv testTTN.csv
+
