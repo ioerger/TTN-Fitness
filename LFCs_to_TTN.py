@@ -11,7 +11,7 @@ import seaborn as sns
 
 
 LFC_data = pd.read_csv(sys.argv[1],sep="\t",header=None)
-LFC_data.columns= ["Coord","NuclWindow","State","Count","Local Mean","LFC"]
+LFC_data.columns= ["Coord","ORF ID","ORF Name","NuclWindow","State","Count","Local Mean","LFC","Description"]
 
 #filter out ES
 LFC_data = LFC_data[LFC_data["State"]!="ES"]

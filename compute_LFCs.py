@@ -102,8 +102,10 @@ PC = 10
 for i in range(Nsites):
   c,m = counts[i],localmeans[i]
   gene = ghash.get(coords[i],None)
-  annot = "igr" if gene==None else "%s"%(gene[2])
+  orfid = "igr" if gene==None else "%s"%(gene[2])
+  orfName = "igr" if gene==None else "%s"%(gene[3])
+  descr = "igr" if gene==None else "%s"%(gene[5])
   lfc = math.log((c+PC)/float(m+PC),2)
-  vals = [coords[i],annot,nucs[i],states[i],round(c,1),round(m,1),round(lfc,3)]
+  vals = [coords[i],orfid,orfName,nucs[i],states[i],round(c,1),round(m,1),round(lfc,3),descr]
   print '\t'.join([str(x) for x in vals])
 

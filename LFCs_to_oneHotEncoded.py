@@ -15,7 +15,7 @@ def complement(x):
  
 #read in LFC dataframe
 LFC_data = pd.read_csv(sys.argv[1],sep="\t",header=None)
-LFC_data.columns= ["Coord","Nucl Window","State","Count","Local Mean","LFC"]
+LFC_data.columns= ["Coord","Orf ID","Orf Name","Nucl Window","State","Count","Local Mean","LFC", "Description"]
 sample_name = sys.argv[1].replace('_LFCs.txt','')
 sample_name = sample_name.split('/')[-1]
 
