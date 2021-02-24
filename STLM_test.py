@@ -10,8 +10,15 @@ import math
 import itertools
 
 """
-Input: STLM pickle model, trainFile in tetraNucl file, testFile in tetraNucl form
-Output: Accuracy of test data on trained STLM model
+python3 STLM_test.py model.pickle testTTN.csv > predictions.csv
+
+1. Load in model from the pickle file
+2. Load in the csv
+3. Predict test data LFC using the loaded model
+4. Plot overall predicted vs. actual LFC of the test data
+5. Plot the mean predicted vs. mean actual LFC
+6. Plot Predicted vs. Actual Counts
+7. Output the compilation of data
 """
 import tarfile
 import os
@@ -32,8 +39,10 @@ X = sm.add_constant(X)
 ypred = reg.predict(X)
 r2score= r2_score(y,ypred)
 test_data["Pred LFC"] = ypred
-#print(X,y,ypred)
 
+############################################################
+# Plot predicted vs. actual LFC
+############################################################
 fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
 fig.suptitle("Test Genome: "+str(test_sample_name))
 ax1.set_title("Predicted vs. Actual LFC")
@@ -47,10 +56,10 @@ ax1.plot([-8,8], [-8,8], 'k--', alpha=0.75, zorder=1)
 ax1.set_xlim(-8,8)
 ax1.set_ylim(-8,8)
 ax1.grid(zorder=0)
-plt.show()
+#plt.show()
 
 ############################################################
-# Correction by Correlation Coefficent
+# Plot predicted vs. actual LFC by TTN
 ############################################################
 combos=[''.join(p) for p in itertools.product(['A','C','T','G'], repeat=4)]
 test_c_averages = []
@@ -85,19 +94,16 @@ test_data["Predicted Count"]=test_data.apply(calcPredictedCounts,axis=1)
 
 fig, (ax3) = plt.subplots(1, sharex=True, sharey=True)
 fig.suptitle(str(test_sample_name)+" Observed vs Predicted Counts")
-ax3.scatter(np.log10(test_data["Count"]),np.log10(test_data["Predicted Count"]),s=1,c='green',alpha=0.5,label='original')
+ax3.scatter(np.log10(test_data["Count"]),np.log10(test_data["Predicted Count"]),s=1,c='green',alpha=0.5)
 ax3.set_xlabel('log Observed Count')
 ax3.set_ylabel('log Predicted Count')
 ax3.axhline(y=0, color='k')
 ax3.axvline(x=0, color='k')
-#ax1.plot([-8,8], [-8,8], 'k--', alpha=0.75, zorder=1)
-#ax1.set_xlim(-8,8)
-#ax1.set_ylim(-8,8)
 ax3.grid(zorder=0)
 ax3.legend()
 plt.show()
 
-
+# print to output
 data = test_data.to_csv(header=True, index=False).split('\n')
 vals = '\n'.join(data)
 print(vals)

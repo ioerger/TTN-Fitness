@@ -6,12 +6,11 @@ import numpy as np
 import itertools
 import scipy.stats as stats
 '''
-Input: Orig LFCs File
-Output: Heatmap to screen and HeatmapDF
-
-Functionality: Take average LFC per nucleotide for every column and plot as a heatmap
-
-#python3 Heatmaps.py LFCs.txt combinedwig > wigCorrelation.csv
+python3 Heatmaps.py LFCs.txt combinedwig > wigCorrelation.csv
+1. If combined wig is passed in, create a heatmap of the correlation of the wig files
+2. Preprocess LFC data to exclude TA sites marked essential and expand the nuclotides within 20 bps from the TA site
+3. Line Graph of the overall probability of nucleotides in each position
+4. Line Graphs of probability of nucleotides in the high middle and lower third ranges of insertion counts
 '''
 ###################################################################################################################
 # if combined wigs file provided, then create the heatmap + output

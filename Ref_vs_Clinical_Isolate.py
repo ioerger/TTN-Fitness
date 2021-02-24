@@ -1,4 +1,3 @@
-#python3 ref_vs_clincal_isolates.py ref_ttn targettn compareTASite picklefile > ref_isolate_mean_CSV
 import sys,os,tarfile
 import pandas as pd
 import statsmodels.api as sm
@@ -11,6 +10,18 @@ import math
 import itertools
 import seaborn as sns
 
+"""
+python3 ref_vs_clincal_isolates.py ref_ttn targettn compareTASite picklefile > ref_isolate_mean_CSV
+
+1. Load in regression model from the pickle file passed in 
+2. Load in input CSVs.
+3. Get the sites with one Nucleotide difference within 4 bps from the TA site 
+4. Get predicted LFCs from the loaded model using the extracted TA sites of the references and isolate strain 
+5. Plot observed LFC vs. predicted LFC differences
+6. Plot every possible SNP in every possible position 4 bps from the TA site
+7. Plot the most significant SNP-positions 
+8. Write details to output
+"""
 #load in regression model
 with tarfile.open(sys.argv[4]+'.tar.gz', 'r') as t:
     t.extractall('')
@@ -57,6 +68,7 @@ loc_SNP =[]
 ref_row_list = []
 isolate_row_list=[]
 for idx,row in compare_sites.iterrows():		
+	#get the rows from the relative ttn csvs according to the coordinate in the selected row
 	ref_subset = ref_data[ref_data["Coord"] == row["ref Coord"]]
 	isolate_subset = isolate_data[isolate_data["Coord"] == row["isolate Coord"]]
 	if (len(ref_subset)>0 and len(isolate_subset)>0):# make sure both indicies are present in ttn list
@@ -69,7 +81,7 @@ for idx,row in compare_sites.iterrows():
 			ref_SNP.append(output[1][0])
 			iso_SNP.append(output[2][0])
 			loc_SNP.append(output[3][0]) 
-ref_filtered = pd.concat(ref_row_list)
+ref_filtered = pd.concat(ref_row_list) 
 ref_filtered = ref_filtered.reset_index(drop=True)
 isolate_filtered=pd.concat(isolate_row_list) 
 isolate_filtered = isolate_filtered.reset_index(drop=True)
@@ -115,7 +127,7 @@ ax1.text(-6, 3.5,"Isolate R2: "+ str(round(r2_score(isolate_obs_LFC,isolate_pred
 ax1.grid(zorder=0)
 
 ##########################################################################################################
-# Get mean obs lfc difference and mean pred lfc difference per reference Nucleotide-isolare Nucleotide-SNPlocation combo.
+# Get mean obs lfc difference and mean pred lfc difference per reference Nucleotide-isolare Nucleotide-SNP location combo.
 
 ref_col=[]
 iso_col=[]

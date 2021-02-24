@@ -1,12 +1,15 @@
 import sys
 import pandas as pd
+"""
+python3 LFCs.txt > OneHotEncoded.csv
 
+1. Preprocess LFC data by excluding essential sites and expanding nucleotides surrounding the TA site into columns
+2. Reverse Complement the nucleotide sequence [call the function] upstream from the TA site
+3. One hot encode the expanded nucleotide sequence
+4. Write to output
+"""
 
-#input is the diffs file computed from computeLFCs.py
-#output is OneHotEncoded Nucleotides
-#Functionality: Filter out the NE genes. OneHotEncode Nucleotides and write to file. As is, no reverse complementing performed.
-#command: python3 diffsFile > OneHotEncoded.csv
-#reverse complement the upstream ones
+#reverse complement function to apply to nucleotides upstream
 def complement(x):
     if(str(x)=="A"): return "T"
     if(str(x)=="C"): return "G"

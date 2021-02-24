@@ -11,10 +11,12 @@ import statsmodels.api as sm
 from sklearn.model_selection import KFold
 '''
 python3 tetranucl.csv pickleFileLoc(must have .pickle at the end)
-Input: tetraNucl.csv
-Output: pickle file of the STLM model
 
-Functionality: Linear Regression trained on 10-fold dataset
+1. Read in the TTN csv
+2. Perform 10 fold cross validation to train and test the model
+3. Plot predict vs. actual LFC
+4. Plot the STLM coef vs. mean LFC per TTN
+5. Train the regression model on all the data and save it to the pickle file and then tar it
 '''
 sample_name = sys.argv[1].replace('_tetranucl.csv','')
 sample_name = sample_name.split('/')[-1]

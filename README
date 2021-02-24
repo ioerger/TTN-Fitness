@@ -1,12 +1,13 @@
 # TAInsertionPreferences
 
+#note the difference in python and python3
 1. python compute_LFCs.py <genome.fna> <genome.prot_table> <counts.wig>(with 1 or more wig files) > LFCs.txt
 2. python3 LFCs_to_TTN.py LFCs.txt > TTN.csv
    python3 LFCs_to_oneHotEncoded.py LFCs.txt > oneHotEncoded.csv
 3. python3 STLM_train.py TTN.csv model.pickle(to save model to, will create tar file)
 4. python3 STLM_test.py model.pickle testTTN.csv > STLM_predictions.csv
 5. python3 Fitness_lin.py LFCs.txt STLM_predictions.csv hmmstages.csv model.pickle prot_table
-
+6. python3 Linear_Reg.py LFCs.txt > Reg_model_descriptions.csv
 
 #About Scripts
 

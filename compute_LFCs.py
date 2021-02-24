@@ -1,5 +1,16 @@
+"""
+Command: python compute_LFCs.py genome.fna genome.prot_table <list of counts.wig files> > genome_LFCs.txt
+
+1. load in the fna file as one long string of characters, load in genes description from the prottable, read in wig files and combine them into parallel array matching Coords and corresponding counts in the wig files
+2. Get average normalized counts per TA site from wig files
+3. Get nucleotides -20bps and +20bps from the TAsites.
+4. Create priliminary essentiality labels for the TA sites (ES = sites of count 0 of 6 more consecutive TA sites)
+5. Compute Local Means per TA site (Mean of past 5 and next 5 TA sites, exluding self)
+6. Using the Local Means and Counts at every TA site to find the LFCs
+"""
 import sys,math,numpy
 
+#read in the fna file as one continous string
 def read_genome(filename):
   s = ""
   n = 0
@@ -8,6 +19,7 @@ def read_genome(filename):
     else: s += line[:-1]
   return s
 
+#read in postion and counts of insertions
 def read_wig(fname):
   coords,counts = [],[]
   for line in open(fname):
@@ -18,6 +30,7 @@ def read_wig(fname):
     counts.append(cnt)
   return coords,counts
 
+#read in values from prot table
 def read_genes(fname,descriptions=False):
   genes = []
   for line in open(fname):
