@@ -9,7 +9,7 @@ import sys
 from sklearn.model_selection import KFold
 
 """
-python3 LFC_Linear_Reg.py LFC.txt > model_descr.csv
+python3 Linear_Reg.py one_hot_encode.csv > model_descr.csv
 
 1. Preprocess the Count/LFC data by excluding the essential sites, expanding the nucleotides surrounding the TA site, and one-hot-encode the nucleotides 
 2. For each of the 10-fold X,Y split 
@@ -22,26 +22,16 @@ python3 LFC_Linear_Reg.py LFC.txt > model_descr.csv
 """
 ################################################################
 #read in LFC dataframe
-LFC_data = pd.read_csv(sys.argv[1],sep="\t",names=["Coord","ORF ID","ORF Name","Nucl Window","State","Count","Local Mean","LFC","Description"])
-sample_name = sys.argv[1].replace('_LFCs.txt','')
+one_hot_data = pd.read_csv(sys.argv[1])
+sample_name = sys.argv[1].replace('.txt','')
 sample_name = sample_name.split('/')[-1]
-LFC_data = LFC_data[LFC_data["State"]!="ES"] #filter out ES
-LFC_data.reset_index(inplace=True, drop=True)
-
-#Expand the nucleotides surrounding the TA site into individual columns
-expanded_nucl_data = LFC_data["Nucl Window"].apply(lambda x: pd.Series(list(x)))
-expanded_nucl_data.columns = [-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,'T','A',1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-
-#one-hot-encoded
-expanded_nucl_data = pd.get_dummies(data=expanded_nucl_data, columns=expanded_nucl_data.columns)
-expanded_nucl_data.reset_index(inplace = True, drop = True)
 
 ################################################################
 #################  Regression Model  ###########################
 ################################################################
-LFC_y = LFC_data['LFC']
-Count_y = np.log10(LFC_data['Count']+0.5)
-X= expanded_nucl_data.drop(["T_T","A_A"],axis=1) # one hot encoded nucl at every position except T A
+LFC_y = one_hot_data['LFC']
+Count_y = np.log10(one_hot_data['Count']+0.5)
+X= one_hot_data.drop(["T_T","A_A","Coord","Count","Local Mean","LFC"],axis=1) # one hot encoded nucl at every position except T A
 
 #perform cross validation and train-test the models
 LFC_R2_list= []
