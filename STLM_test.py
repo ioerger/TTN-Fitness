@@ -1,4 +1,4 @@
-import sys
+import sys,os,tarfile
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.iolib.smpickle import load_pickle
@@ -20,8 +20,6 @@ python3 STLM_test.py model.pickle testTTN.csv > predictions.csv
 6. Plot Predicted vs. Actual Counts
 7. Output the compilation of data
 """
-import tarfile
-import os
 
 with tarfile.open(sys.argv[1]+'.tar.gz', 'r') as t:
     t.extractall('')

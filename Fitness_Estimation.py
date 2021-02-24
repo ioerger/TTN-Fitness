@@ -10,8 +10,15 @@ import os,sys,tarfile
 import statsmodels.stats.multitest  
 from matplotlib.lines import Line2D
 
-#python3 Fitness_Estimation.py LFC.txt STLM_prediction.csv HMMStages.csv model.pickle prot_table
+"""
+python3 Fitness_Estimation.py LFC.txt STLM_prediction.csv HMMStages.csv model.pickle prot_table > Gene_estimation.csv
 
+1. Read in Data
+2. Filter out data to include the coordinates in both the TTN csv and the gene data (exclude the genes labeled ES and TA sites labeled ES)
+3. Linear Regression with Gene-only and Gene+TTN data
+4. Fitness estimations based on Gene+TTN model
+5. Create Gene Summary dataframe output
+"""
 ##################################################################################
 # Read in Data
 TA_site_data = pd.read_csv(sys.argv[1],sep="\t",names=["Coord","ORF ID","ORF Name","Nucleotide","State","Count","Local Mean","LFC","Description"])
