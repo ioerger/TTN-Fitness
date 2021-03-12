@@ -10,7 +10,7 @@ import math
 import itertools
 
 """
-python3 STLM_test.py model.pickle testTTN.csv > predictions.csv
+python3 STLM_test.py model.pickle trainTTN.csv testTTN.csv > predictions.csv
 
 1. Load in model from the pickle file
 2. Load in the csv
@@ -26,10 +26,13 @@ with tarfile.open(sys.argv[1]+'.tar.gz', 'r') as t:
 reg = sm.load(os.path.basename(sys.argv[1]))
 os.remove(os.path.basename(sys.argv[1]))
 
-test_data = pd.read_csv(sys.argv[2])
+train_data = pd.read_csv(sys.argv[2])
+train_data = train_data.dropna()
+train_sample_name = sys.argv[2].split("/")[-1].replace('.csv','')
+
+test_data = pd.read_csv(sys.argv[3])
 test_data = test_data.dropna()
-test_sample_name = sys.argv[2].replace('.csv','')
-test_sample_name = test_sample_name.split('/')[-1]
+test_sample_name = sys.argv[3].split('/')[-1].replace('.csv','')
 
 y = test_data["LFC"]
 X = test_data.drop(["Coord","Count","Local Mean","LFC"],axis=1)
@@ -57,32 +60,6 @@ ax1.grid(zorder=0)
 #plt.show()
 
 ############################################################
-# Plot predicted vs. actual LFC by TTN
-############################################################
-combos=[''.join(p) for p in itertools.product(['A','C','T','G'], repeat=4)]
-test_c_averages = []
-for c in combos:
-        c_tetra_test= test_data[test_data[c]==1]
-        test_c_averages.append(c_tetra_test["LFC"].mean())
-
-pred_c_averages = []
-for c in combos:
-        c_tetra_test= test_data[test_data[c]==1]
-        pred_c_averages.append(c_tetra_test["Pred LFC"].mean())
-
-
-fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
-fig.suptitle("Predicted  VS. Observed "+str(test_sample_name)+ " TetraNucl MeanCount")
-ax1.scatter(pred_c_averages,test_c_averages,s=5,c='green',alpha=0.75)
-ax1.set_xlabel(str(test_sample_name)+' Predicted LFC Average')
-ax1.set_ylabel(str(test_sample_name)+' Observed LFC Average')
-ax1.axhline(y=0, color='k')
-ax1.axvline(x=0, color='k')
-ax1.plot([-3,3], [-3,3], 'k--', alpha=0.25, zorder=1)
-ax1.grid(zorder=0)
-#plt.show()
-
-############################################################
 # Predicted vs Observed Counts Graph
 ############################################################
 def calcPredictedCounts(row):
@@ -99,7 +76,72 @@ ax3.axhline(y=0, color='k')
 ax3.axvline(x=0, color='k')
 ax3.grid(zorder=0)
 ax3.legend()
+#plt.show()
+
+############################################################
+# Corrected Predicted vs. Observed Counts Graph
+############################################################
+combos=[''.join(p) for p in itertools.product(['A','C','T','G'], repeat=4)]
+train_c_averages = []
+test_c_averages = []
+pred_c_averages=[]
+
+for c in combos:
+	c_tetra_train = train_data[train_data[c]==1]
+	train_c_averages.append(c_tetra_train["LFC"].mean())
+	c_tetra_test= test_data[test_data[c]==1]
+	test_c_averages.append(c_tetra_test["LFC"].mean())
+	pred_c_averages.append(c_tetra_test["Pred LFC"].mean())
+
+cor_reg = LinearRegression(fit_intercept=True).fit(X=np.asarray(train_c_averages).reshape(-1,1),y=test_c_averages)
+correction_int = cor_reg.intercept_
+correction_coef = cor_reg.coef_
+
+
+corrected_ypred = [(i*correction_coef[0])+correction_int for i in ypred]
+r2score= r2_score(y,corrected_ypred)
+test_data["Corrected Pred LFC"] = corrected_ypred
+corrected_actual_LFC = [(i*correction_coef[0])+correction_int for i in test_data["LFC"]]
+test_data["Corrected LFC"] = corrected_actual_LFC
+
+corrected_test_c_averages = []
+for c in combos:
+	c_tetra_test= test_data[test_data[c]==1]
+	corrected_test_c_averages.append(c_tetra_test["Corrected LFC"].mean())
+
+corrected_train  = [(i*correction_coef[0])+correction_int for i in train_data["LFC"]]
+train_data["Corrected Train LFC"] = corrected_train
+
+corrected_train_c_averages=[]
+for c in combos:
+        c_tetra_train= train_data[train_data[c]==1]
+        corrected_train_c_averages.append(c_tetra_train["Corrected Train LFC"].mean())
+fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
+fig.suptitle("Predicted  VS. Observed "+str(test_sample_name)+ " TetraNucl MeanCount")
+ax1.scatter(pred_c_averages,test_c_averages,s=5,c='green',alpha=0.75)
+ax1.set_xlabel(str(test_sample_name)+' Predicted LFC Average')
+ax1.set_ylabel(str(test_sample_name)+' Observed LFC Average')
+ax1.axhline(y=0, color='k')
+ax1.axvline(x=0, color='k')
+ax1.plot([-3,3], [-3,3], 'k--', alpha=0.25, zorder=1)
+ax1.grid(zorder=0)
+#plt.show()
+
+fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
+fig.suptitle(str(train_sample_name)+"--"+str(test_sample_name)+ " TetraNucl MeanCount")
+ax1.scatter(train_c_averages,test_c_averages,s=5,c='green',alpha=0.75,label="original")
+ax1.scatter(corrected_train_c_averages,test_c_averages,s=5,c='blue',alpha=0.75, label='adjusted')
+ax1.set_xlabel(str(train_sample_name)+' LFC Average')
+ax1.set_ylabel(str(test_sample_name)+' LFC Average')
+ax1.text(-3, 1.5, "Original R2: "+ str(round(r2_score(y,ypred),4)), fontsize=10)
+ax1.text(-3, 1.0, "Adjusted R2: "+ str(round(r2_score(y,corrected_ypred),4)), fontsize=10)
+ax1.axhline(y=0, color='k')
+ax1.axvline(x=0, color='k')
+ax1.plot([-3,3], [-3,3], 'k--', alpha=0.25, zorder=1)
+ax1.legend()
+ax1.grid(zorder=0)
 plt.show()
+
 
 # print to output
 data = test_data.to_csv(header=True, index=False).split('\n')
