@@ -9,7 +9,7 @@ import sys
 from sklearn.model_selection import KFold
 
 """
-python3 Linear_Reg.py one_hot_encode.csv > model_descr.csv
+python3 Linear_Reg.py one_hot_encode.csv> model_descr.csv
 
 1. Preprocess the Count/LFC data by excluding the essential sites, expanding the nucleotides surrounding the TA site, and one-hot-encode the nucleotides 
 2. For each of the 10-fold X,Y split 

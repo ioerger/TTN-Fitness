@@ -10,5 +10,4 @@
 6. python3 Linear_Reg.py oneHotEncoded.csv > Reg_model_descriptions.csv
 
 
-#About Scripts
-
+7. python3 Prelim_Analysi.py

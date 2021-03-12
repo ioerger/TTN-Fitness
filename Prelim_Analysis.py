@@ -6,7 +6,7 @@ import numpy as np
 import itertools
 import scipy.stats as stats
 '''
-python3 Heatmaps.py LFCs.txt combinedwig > wigCorrelation.csv
+python3 Prelim_Analysis.py LFCs.txt combinedwig > wigCorrelation.csv
 1. If combined wig is passed in, create a heatmap of the correlation of the wig files
 2. Preprocess LFC data to exclude TA sites marked essential and expand the nuclotides within 20 bps from the TA site
 3. Line Graph of the overall probability of nucleotides in each position
@@ -15,25 +15,52 @@ python3 Heatmaps.py LFCs.txt combinedwig > wigCorrelation.csv
 ###################################################################################################################
 # if combined wigs file provided, then create the heatmap + output
 if (len(sys.argv)>2):
-	combined_wig = pd.read_csv(sys.argv[2],header=None,sep='\t',skiprows=17).iloc[:,1:15]
-	combined_wig= pd.DataFrame(np.ma.log(combined_wig.values).filled(0), index=combined_wig.index, columns=combined_wig.columns)
+	#read in text file with '#File: ' to store in names in order they appear in the file to associate with columns in the combined wig file  
+	file1 = open(sys.argv[2], 'r')
+	Lines = file1.readlines()
+	skip_count = 0 #skip the first lines that detail normalization menthod through transit
+	filenames=[]
+	for l in Lines:
+        	if l.startswith("#") ==False: break
+        	else:
+                	skip_count = skip_count+1
+                	if l.startswith("#File:"): filenames.append(l.split("File:")[-1].lstrip().rstrip())
+
+	#combined wig files script is normalized across the libraries
+	combined_wig_df = pd.read_csv(sys.argv[2],header=None,sep='\t',skiprows=skip_count, names= ["Coord"]+filenames+["ORF ID"]).set_index("Coord")
+	combined_wig_df["ORF ID"] = combined_wig_df["ORF ID"].fillna("igr")
+	combined_wig = combined_wig_df[combined_wig_df.columns[:-1]]
+	combined_wig = combined_wig.replace(0,1)
+	combined_wig= np.log10(combined_wig)
+
+	x_vals = []
+	y_vals = []
+	for col in combined_wig.columns:
+        	x_vals.extend(combined_wig[250:325][col].index)
+        	y_vals.extend(combined_wig[250:325][col].values)
+
+	ax=sns.boxplot(x=x_vals, y=y_vals, color="white")
+	ax=sns.swarmplot(x=x_vals, y=y_vals,s=3)
+	plt.title("log10 Insertion Counts at TA sites across 14 replicates")
+	plt.xlabel("Coordinates")
+	plt.ylabel("log10 Insertion Counts")
+	plt.xticks(rotation=(90))
+	#plt.show() #commented out to get plots at once
+
 	corr_wigs = combined_wig.corr(method ='pearson')
 	# Generate a mask for the upper triangle
 	mask = np.triu(np.ones_like(corr_wigs, dtype=bool),k=1)
-
 	# insertion counts corr across datasets figure
 	f, ax = plt.subplots()
 	f.suptitle("Pearson Correlation of log Insertion Counts across Datasets")
-	sns.heatmap(corr_wigs, mask=mask, cmap='Reds', vmin=0,vmax=1,square=True, linewidths=.5, cbar_kws={"shrink": .5})
-	plt.show()
+	g = sns.heatmap(corr_wigs, mask=mask, cmap='Reds', vmin=0,vmax=1,square=True, linewidths=.5, cbar_kws={"shrink": .5})
+	plt.tight_layout()
+	#plt.show()
 
 	#t-tests output of the Correlation
-	f1 = []
-	f2=[]
-	corr=[]
-	corr_pval= []
-	t_val = []
-	ttest_pval = []
+	f1,f2 = [],[]
+	corr,corr_pval=[],[]
+	t_val,ttest_pval = [],[]
 	file_combos = itertools.combinations(combined_wig.columns,r=2)
 	for c in file_combos:
         	f1.append(c[0])
@@ -45,10 +72,9 @@ if (len(sys.argv)>2):
         	t_val.append(res[0])
         	ttest_pval.append(res[1])
 	ttest_df = pd.DataFrame(data={"Wig File 1":f1,"Wig File 2":f2,"Pearson Corr":corr,"Corr Pvalue":corr_pval,"T-stat":t_val,"T-test Pval":ttest_pval})
-	data = ttest_df.to_csv(header=True, index=False).split('\n')
-	vals = '\n'.join(data)
+	ttest_data = ttest_df.to_csv(header=True,index=False).split('\n')
+	vals = '\n'.join(ttest_data)
 	print(vals)
-
 
 ##############################################################################################################################
 # LFC data process
@@ -88,7 +114,7 @@ sns.heatmap(heatmap_df,cmap='PRGn',center=median,vmin=median-1.5,vmax=median+1.5
 #LFC Distribution Plot
 plt.figure()
 sns.distplot(expanded_nucl_data["LFC"],bins=50).set_title(sample_name+" LFC Distribution")
-plt.show()
+#plt.show()
 
 ##### Nucleotide Probability Graphs###########
 def create_count_df(input_df):
