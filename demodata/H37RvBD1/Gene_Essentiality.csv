@@ -1,4 +1,4 @@
-ORF ID,Name,Description,Total # TA Sites,#Sites with 0 insertions,Used in Models,Gene (M0) Coef,Gene (M0) Adj Pval,Gene+TTN (M1) Coef,Gene+TTN (M1) Adj Pval,Coef Diff (M1-M0),Coef Diff Adj Pval,Mean STLM Predicted Count,Mean Actual Count,Gene+TTN States,HMM+NP States
+ORF ID,Name,Description,Total # TA Sites,#Sites with insertions,Used in Models,Gene (M0) Coef,Gene (M0) Adj Pval,Gene+TTN (M1) Coef,Gene+TTN (M1) Adj Pval,Coef Diff (M1-M0),Coef Diff Adj Pval,Mean STLM Predicted Count,Mean Actual Count,Gene+TTN States,HMM+NP States
 Rv0001,dnaA,chromosomal replication initiation protein ,32,8,False,,,,,,,,5.6625,ES/ESD,ES
 Rv0002,dnaN,DNA polymerase III subunit beta ,31,3,False,,,,,,,,0.05161290322580645,Uncertain,ES
 Rv0003,recF,recombination protein F ,35,31,True,-0.5176710380592033,0.00025422972526095835,-0.5383782366366737,6.053235917628321e-10,-0.020707198577470387,0.5911391318984984,22.35552079483062,32.58285714285714,GD,NE
