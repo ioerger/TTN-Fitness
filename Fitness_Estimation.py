@@ -33,7 +33,7 @@ reg = sm.load(os.path.basename(sys.argv[4]))
 os.remove(os.path.basename(sys.argv[4]))
 
 prot_table = pd.read_csv(sys.argv[5],sep='\t',header=None, names= ["Description", "X1","X2","X3","X4","X5","X6","ORF Name","ORF ID","X9","X10"])
-prot_table.set_index("ORF ID", drop=True, inplace=True)
+prot_table.set_index("ORF ID", drop=False,inplace=True)
 
 gumbel_pred = pd.read_csv(sys.argv[6],sep='\t')
 ###################################################################################
@@ -50,21 +50,26 @@ def filter_ES(data_df):
 	filtered_df = data_df[data_df["ORF ID"].isin(genes_to_keep)] 
 	return filtered_df
 
-def gumbel_filter_ES(data_df):
-	all_genes = data_df["ORF ID"].unique()
-	genes_to_keep=[]
+def gumbel(data_df):
+	all_genes = data_df["ORF ID"]
+	gumbel_calls=[]
 	for g in all_genes:
-		gumbel_call='E'
+		call='U'
 		sub_gumbel=gumbel_pred[gumbel_pred["Orf"]==g]
-		if len(sub_gumbel)>0:gumbel_call = sub_gumbel["Call"].iloc[0]
-		if gumbel_call!="E": genes_to_keep.append(g)
-	filtered_df = data_df[data_df["ORF ID"].isin(genes_to_keep)] 
-	return filtered_df
+		if len(sub_gumbel)>0: call = sub_gumbel["Call"].iloc[0]
+		#if sub_gumbel["zbar"].iloc[0]>0.6: call='E'
+		gumbel_calls.append(call)
+	return gumbel_calls
 
 #filtered_ES_gene_data = filter_ES(TA_site_data) #sites from genes that are mostly non-ES
-filtered_ES_gene_data = gumbel_filter_ES(TA_site_data)
-ttn_filtered_data = ttn_data[ttn_data["Coord"].isin(filtered_ES_gene_data["Coord"])] #ttn data only from sites within nonES genes
-filtered_TA_sites_data = filtered_ES_gene_data[filtered_ES_gene_data["Coord"].isin(ttn_filtered_data["Coord"])] #essentially taking all the remaining ES sites out.
+TA_site_data = TA_site_data[TA_site_data["ORF ID"]!="igr"] #ignore IGR in our analysis, since it clumps all igr into one value
+TA_site_data["Gumbel Call"]=gumbel(TA_site_data)
+
+filtered_ES_site_data = TA_site_data[TA_site_data["Gumbel Call"]!='E']
+
+ttn_filtered_data = ttn_data[ttn_data["Coord"].isin(filtered_ES_site_data["Coord"])] #ttn data only from sites within nonES genes
+filtered_TA_sites_data = filtered_ES_site_data[filtered_ES_site_data["Coord"].isin(ttn_filtered_data["Coord"])] #essentially taking all the remaining ES sites out.
+
 ttn_filtered_data=ttn_filtered_data.reset_index(drop=True)
 filtered_TA_sites_data = filtered_TA_sites_data.reset_index(drop=True)
 ttn_filtered_data["ORF ID"] = filtered_TA_sites_data["ORF ID"]
@@ -121,24 +126,27 @@ Models_df.loc[(Models_df["M1 Adjusted Pval"]>0.05),"Gene+TTN States"]="NE"
 #Write Models Information to CSV
 # Columns: ORF ID, ORF Name, ORF Description,M0 Coef, M0 Adj Pval
 gene_dict={} #dictionary to map information per gene
-for g in prot_table.index.unique():
-	val = [g, prot_table.loc[g,"ORF Name"], prot_table.loc[g,"Description"],len(TA_site_data[TA_site_data["ORF ID"]==g]),len(TA_site_data[(TA_site_data["ORF ID"]==g) & (TA_site_data["Count"]==0)])]
-	if "_"+g in results1.params[1:]:
+for g in TA_site_data["ORF ID"].unique():
+	val = [g, prot_table.loc[g,"ORF Name"], prot_table.loc[g,"Description"],len(TA_site_data[TA_site_data["ORF ID"]==g]),len(TA_site_data[(TA_site_data["ORF ID"]==g) & (TA_site_data["Count"]>0)])]
+	if "_"+g in results2.params[1:]:
 		pred_counts = ttn_filtered_data[ttn_filtered_data["ORF ID"]==g]["Predicted Count"]
 		actual_counts = ttn_filtered_data[ttn_filtered_data["ORF ID"]==g]["Count"]
 		val.extend([True,Models_df.loc["_"+g,"M0 Coef"],Models_df.loc["_"+g,"M0 Adjusted Pval"],Models_df.loc["_"+g,"M1 Coef"],Models_df.loc["_"+g,"M1 Adjusted Pval"], Models_df.loc["_"+g,"Coef Diff (M1-M0)"], Models_df.loc["_"+g,"Coef Diff Adjusted Pval"],np.mean(pred_counts),np.mean(actual_counts), Models_df.loc["_"+g,"Gene+TTN States"]])
 	
 	else:
-		actual_counts = filtered_TA_sites_data[filtered_TA_sites_data["ORF ID"]==g]["Count"]
-		val.extend([False,None, None, None, None, None,None,None,actual_counts,"ES/ESD"])
-
+		gumbel_call = TA_site_data[TA_site_data["ORF ID"]==g]["Gumbel Call"].iloc[0]
+		actual_counts = TA_site_data[TA_site_data["ORF ID"]==g]["Count"]
+		if gumbel_call == "E": gumbel_call="ES/ESD"
+		else:gumbel_call="Uncertain"
+		val.extend([False,None, None, None, None, None,None,None,np.mean(actual_counts),gumbel_call])
+	
 	if g in hmm_stages.index:
 		val.extend([hmm_stages.loc[g,"Final Call"]])
 	else:
 		val.extend(["Uncertain"])
 	gene_dict[g] = val
 gene_df = pd.DataFrame.from_dict(gene_dict,orient='index')
-gene_df.columns=["ORF ID","Name","Description","Total # TA Sites","#Sites with 0 insertions","Used in Models","Gene (M0) Coef","Gene (M0) Adj Pval","Gene+TTN (M1) Coef","Gene+TTN (M1) Adj Pval","Coef Diff (M1-M0)","Coef Diff Adj Pval","Mean STLM Predicted Count","Mean Actual Count","Gene+TTN States","HMM+NP States"]
+gene_df.columns=["ORF ID","Name","Description","Total # TA Sites","#Sites with insertions","Used in Models","Gene (M0) Coef","Gene (M0) Adj Pval","Gene+TTN (M1) Coef","Gene+TTN (M1) Adj Pval","Coef Diff (M1-M0)","Coef Diff Adj Pval","Mean STLM Predicted Count","Mean Actual Count","Gene+TTN States","HMM+NP States"]
 #print(gene_df)
 
 gene_data = gene_df.to_csv(header=True, index=False).split('\n')

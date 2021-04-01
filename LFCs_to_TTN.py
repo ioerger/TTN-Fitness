@@ -19,7 +19,7 @@ LFC_data = pd.read_csv(sys.argv[1],sep="\t",header=None)
 LFC_data.columns= ["Coord","ORF ID","ORF Name","Nucl Window","State","Count","Local Mean","LFC","Description"]
 
 #filter out ES
-LFC_data = LFC_data[LFC_data["State"]!="ES"]
+#LFC_data = LFC_data[LFC_data["State"]!="ES"]
 LFC_data = LFC_data.reset_index(drop=True)
 
 #expand out the nucleotides into their own columns
@@ -60,10 +60,12 @@ temp_df["Downseq"] = up_rc_down_df[17]+up_rc_down_df[18]+up_rc_down_df[19]+up_rc
 #create te dataframe and write to out
 tetra_nucl_data = temp_df.apply(generate_bit_vector,axis=1,result_type="expand")#get TTN vectors for every site
 tetra_nucl_data["Coord"] = LFC_data["Coord"]
+tetra_nucl_data["ORF ID"] = LFC_data["ORF ID"]
+tetra_nucl_data["ORF Name"] = LFC_data["ORF Name"]
 tetra_nucl_data["Count"] = LFC_data["Count"]
 tetra_nucl_data["Local Mean"] = LFC_data["Local Mean"]
 tetra_nucl_data["LFC"] = LFC_data["LFC"]
-
+tetra_nucl_data["State"] = LFC_data["State"]
 tetra_nucl_data = tetra_nucl_data.to_csv(header=True, index=False).split('\n')
 vals = '\n'.join(tetra_nucl_data)
 print(vals)

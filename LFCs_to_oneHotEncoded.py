@@ -18,7 +18,7 @@ def complement(x):
  
 #read in LFC dataframe
 LFC_data = pd.read_csv(sys.argv[1],sep="\t",header=None)
-LFC_data.columns= ["Coord","Orf ID","Orf Name","Nucl Window","State","Count","Local Mean","LFC", "Description"]
+LFC_data.columns= ["Coord","ORF ID","ORF Name","Nucl Window","State","Count","Local Mean","LFC", "Description"]
 sample_name = sys.argv[1].replace('_LFCs.txt','')
 sample_name = sample_name.split('/')[-1]
 
@@ -38,6 +38,8 @@ expanded_data = pd.concat([orig_df, rev_df], axis=1)
 #one-hot-encoded
 expanded_data = pd.get_dummies(data=expanded_data, columns=expanded_data.columns)
 expanded_data["Coord"]=LFC_data["Coord"]
+expanded_data["ORF ID"] = LFC_data["ORF ID"]
+expanded_data["ORF Name"] = LFC_data["ORF Name"]
 expanded_data["Count"]=LFC_data["Count"]
 expanded_data["Local Mean"]=LFC_data["Local Mean"]
 expanded_data["LFC"] = LFC_data["LFC"]

@@ -10,26 +10,27 @@ import itertools
 import statsmodels.api as sm
 from sklearn.model_selection import KFold
 '''
-python3 tetranucl.csv pickleFileLoc(must have .pickle at the end)
+python3 tetranucl.csv pickleFileLoc(must have .pickle at the end) > TTN_descr.txt
 
 1. Read in the TTN csv
 2. Perform 10 fold cross validation to train and test the model
-3. Write details about the TTN coefs to csv
+3. Print details about the TTN coefs 
 3. Plot predict vs. actual LFC
 4. Plot the STLM coef vs. mean LFC per TTN
 5. Train the regression model on all the data and save it to the pickle file and then tar it
 '''
 ####################################################################################
 # read in file 
-sample_name = sys.argv[1].replace('_tetranucl.csv','')
+sample_name = sys.argv[1].replace('.csv','')
 sample_name = sample_name.split('/')[-1]
 
 tetra_nucl_data = pd.read_csv(sys.argv[1])
+tetra_nucl_data = tetra_nucl_data[tetra_nucl_data["State"]!="ES"]
 tetra_nucl_data.reset_index(inplace=True, drop=True)
 tetra_nucl_data = tetra_nucl_data.dropna()
 
 y = tetra_nucl_data["LFC"]
-X = tetra_nucl_data.drop(["Coord","Count","Local Mean","LFC"],axis=1)
+X = tetra_nucl_data.drop(["Coord","ORF ID","ORF Name","Count","Local Mean","LFC","State"],axis=1)
 
 #####################################################################################
 #                               Train Regression Model 
