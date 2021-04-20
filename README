@@ -5,9 +5,13 @@
 2. python3 LFCs_to_TTN.py LFCs.txt > TTN.csv
    python3 LFCs_to_oneHotEncoded.py LFCs.txt > oneHotEncoded.csv
 3. python3 STLM_train.py TTN.csv model.pickle(to save model to, will create tar file)
-4. python3 STLM_test.py model.pickle testTTN.csv > STLM_predictions.csv
-5. python3 Fitness_lin.py LFCs.txt STLM_predictions.csv hmmstages.csv model.pickle prot_table
+4. python3 STLM_test.py model.pickle trainTTN.csv testTTN.csv > STLM_predictions.csv
+
+transit hmm <comma-separated .wig files> <annotation .prot_table or GFF3> <output file>
+transit gumbel <comma-separated .wig files> <annotation .prot_table or GFF3> <output file> [Optional Arguments]
+
+5. python3 Fitness_Estimation.py TTN.csv hmm_genes.csv model.pickle prot_table Gumbel_predictions.txt > Gene_Essentiality.csv
+	- hmm_genes can be the transit generated file or the hmm+np file
+
 6. python3 Linear_Reg.py oneHotEncoded.csv > Reg_model_descriptions.csv
-
-
 7. python3 Prelim_Analysi.py

@@ -10,88 +10,113 @@ import os,sys,tarfile
 import statsmodels.stats.multitest  
 from matplotlib.lines import Line2D
 from sklearn.metrics import confusion_matrix
+import math
 
 """
-python3 Fitness_Estimation.py LFC.txt STLM_prediction.csv HMMStages.csv model.pickle prot_table Gumbel_pred.txt> Gene_estimation.csv
-
-1. Read in Data
-2. Filter out data to include the coordinates in both the TTN csv and the gene data (exclude the genes labeled ES and TA sites labeled ES)
-3. Linear Regression with Gene-only and Gene+TTN data
-4. Fitness estimations based on Gene+TTN model
-5. Create Gene Summary dataframe output
+python3 ../../Fitness_Estimation.py H37RvBD1_TTN.csv H37RvBD1_hmm_stages.csv H37RvBD1.pickle H37RvBD1.prot_table Gumbel_pred.txt > Gene_Essentiality.csv 
 """
 ##################################################################################
 # Read in Data
-TA_site_data = pd.read_csv(sys.argv[1],sep="\t",names=["Coord","ORF ID","ORF Name","Nucleotide","State","Count","Local Mean","LFC","Description"])
-ttn_data = pd.read_csv(sys.argv[2])
-hmm_stages = pd.read_csv(sys.argv[3])
-hmm_stages.set_index("ORF ID", drop=True, inplace=True)
+ttn_data = pd.read_csv(sys.argv[1])
 
-with tarfile.open(sys.argv[4]+'.tar.gz', 'r') as t:
-    t.extractall('')
-reg = sm.load(os.path.basename(sys.argv[4]))
-os.remove(os.path.basename(sys.argv[4]))
+# HMM Stages
+skip_count =0
+hmm_file = open(sys.argv[2],'r')
+for line in hmm_file.readlines():
+	if line.startswith('#'):skip_count = skip_count+1
+	else:break
+hmm_file.close()
+ 
+#specifically HMM+NP file 
 
-prot_table = pd.read_csv(sys.argv[5],sep='\t',header=None, names= ["Description", "X1","X2","X3","X4","X5","X6","ORF Name","ORF ID","X9","X10"])
-prot_table.set_index("ORF ID", drop=False,inplace=True)
+hmm_stages = pd.read_csv(sys.argv[2],sep=',', skiprows=skip_count,names=["ORF ID","Name","Description","Number of TA Sites","Number of Permissive (P) Sites","Number of Non-Permissive (NP) Sites","Number of Sites Belonging to Essential State","Number of Sites Belonging to Growth-Defect State","Number of Sites Belonging to Non-Essential State","Number of Sites Belonging to Growth-Advantage State","Fraction of Sites with Insertions","Mean Normalized Read-Count At Non-Zero Sites","Final Call"])
 
-gumbel_pred = pd.read_csv(sys.argv[6],sep='\t')
+"""
+For HMM files
+hmm_stages = pd.read_csv(sys.argv[2],sep='\t', skiprows=skip_count,names=["Coord","X1","X2","X3","X4","X5","Final Call","Orf Info"])
+hmm_stages["Orf Info"].fillna('igr_(igr)', inplace=True)
+Orf_Info_Split = hmm_stages["Orf Info"].str.rsplit("_",  n=1, expand = True)
+hmm_stages["ORF ID"] = Orf_Info_Split[0]
+hmm_stages["ORF Name"] = Orf_Info_Split[1]
+hmm_stages["ORF Name"] = hmm_stages["ORF Name"].str.replace("\(","")
+hmm_stages["ORF Name"] = hmm_stages["ORF Name"].str.replace("\)","")
+hmm_stages["Final Call"] = hmm_stages["Final Call").str.replace("E","ES")
+hmm_stages.drop(columns=["Orf Info"], inplace=True)
+"""
+
+# Regression Pickle
+with tarfile.open(sys.argv[3]+'.tar.gz', 'r') as t:
+	t.extractall('')
+reg = sm.load(os.path.basename(sys.argv[3]))
+os.remove(os.path.basename(sys.argv[3]))
+
+# Prot Table
+prot_table = pd.read_csv(sys.argv[4],sep='\t',header=None, names= ["Description", "X1","X2","X3","X4","X5","X6","ORF Name","ORF ID","X9","X10"])
+prot_table.set_index("ORF ID", drop=True, inplace=True)
+
+# Gumbel Predictions
+skip_count =0
+gumbel_file = open(sys.argv[5],'r')
+for line in gumbel_file.readlines():
+        if line.startswith('#'):skip_count = skip_count+1
+        else:break
+gumbel_file.close()
+
+gumbel_pred = pd.read_csv(sys.argv[5],sep='\t',skiprows=skip_count, names =["Orf","Name","Desc","k","n","r","s","zbar","Call"],dtype = str)
 ###################################################################################
 #Filter Loaded  Data
-def filter_ES(data_df):
-	all_genes = data_df["ORF ID"].unique()
-	genes_to_keep=[]
-	for g in all_genes:
-		sub_df=data_df[data_df["ORF ID"]==g]
-		state_lbs = sub_df["State"].to_list()
-		percentage = state_lbs.count('NE')/len(state_lbs)
-		if percentage>0.5:
-			genes_to_keep.append(g)
-	filtered_df = data_df[data_df["ORF ID"].isin(genes_to_keep)] 
-	return filtered_df
+saturation = len(ttn_data[ttn_data["Count"]>0])/len(ttn_data)
+phi = 1.0 - saturation
+significant_n = math.log10(0.05)/math.log10(phi)
 
-def gumbel(data_df):
-	all_genes = data_df["ORF ID"]
-	gumbel_calls=[]
-	for g in all_genes:
-		call='U'
+def gumbel_calls(data_df):
+	calls = []
+	for g in data_df["ORF ID"]:
+		gene_call='U'
 		sub_gumbel=gumbel_pred[gumbel_pred["Orf"]==g]
-		if len(sub_gumbel)>0: call = sub_gumbel["Call"].iloc[0]
-		#if sub_gumbel["zbar"].iloc[0]>0.6: call='E'
-		gumbel_calls.append(call)
-	return gumbel_calls
+		if len(sub_gumbel)>0:gene_call = sub_gumbel["Call"].iloc[0]
+		#set to ES if greater than n and all 0s
+		sub_data = data_df[data_df["ORF ID"]==g]
+		if len(sub_data)>significant_n and len(sub_data[sub_data["Count"]>0])==0: gene_call="EB"
+		calls.append(gene_call)
+	return calls
+	
 
-#filtered_ES_gene_data = filter_ES(TA_site_data) #sites from genes that are mostly non-ES
-TA_site_data = TA_site_data[TA_site_data["ORF ID"]!="igr"] #ignore IGR in our analysis, since it clumps all igr into one value
-TA_site_data["Gumbel Call"]=gumbel(TA_site_data)
+ttn_data= ttn_data[ttn_data["ORF ID"]!="igr"]
+ttn_data["Gumbel Call"] = gumbel_calls(ttn_data)
 
-filtered_ES_site_data = TA_site_data[TA_site_data["Gumbel Call"]!='E']
+filtered_ttn_data = ttn_data[ttn_data["Gumbel Call"]!="E"]
+filtered_ttn_data= filtered_ttn_data[filtered_ttn_data["Gumbel Call"]!="EB"]
+filtered_ttn_data = filtered_ttn_data.reset_index(drop=True)
 
-ttn_filtered_data = ttn_data[ttn_data["Coord"].isin(filtered_ES_site_data["Coord"])] #ttn data only from sites within nonES genes
-filtered_TA_sites_data = filtered_ES_site_data[filtered_ES_site_data["Coord"].isin(ttn_filtered_data["Coord"])] #essentially taking all the remaining ES sites out.
-
-ttn_filtered_data=ttn_filtered_data.reset_index(drop=True)
-filtered_TA_sites_data = filtered_TA_sites_data.reset_index(drop=True)
-ttn_filtered_data["ORF ID"] = filtered_TA_sites_data["ORF ID"]
 ##########################################################################################
 #Linear Regression
-gene_one_hot_encoded= pd.get_dummies(filtered_TA_sites_data["ORF ID"],prefix='')
-ttn_vectors = ttn_filtered_data.drop(["Coord","Count","Local Mean","LFC","Pred LFC","Predicted Count", "ORF ID"],axis=1)
+gene_one_hot_encoded= pd.get_dummies(filtered_ttn_data["ORF ID"],prefix='')
+ttn_vectors = filtered_ttn_data.drop(["Coord","Count","ORF ID","ORF Name","Local Mean","LFC","State", "Gumbel Call"],axis=1)
 
 X1 = pd.concat([gene_one_hot_encoded],axis=1)
 X1 = sm.add_constant(X1)
 X2 = pd.concat([gene_one_hot_encoded,ttn_vectors],axis=1)
 X2 = sm.add_constant(X2)
-Y = np.log10(ttn_filtered_data["Count"]+0.5)
+Y = np.log10(filtered_ttn_data["Count"]+0.5)
 results1 = sm.OLS(Y,X1).fit()
 results2 = sm.OLS(Y,X2).fit()
+
+X3 = pd.concat([ttn_vectors],axis=1)
+X3 = sm.add_constant(X3)
+ypred = reg.predict(X3)
+filtered_ttn_data["Pred LFC"] = ypred
+def calcPredictedCounts(row):
+        predCount = row["Local Mean"]*math.pow(2,row["Pred LFC"])
+        return predCount
+filtered_ttn_data["Predicted Count"]=filtered_ttn_data.apply(calcPredictedCounts,axis=1)
 ##########################################################################################
 #create Models Summary df 
 def calcpval(row):
         c1 = row["M0 Coef"]
         c2 = row["M1 Coef"]
-        g = row.name.split("_")[1]
-        n = len(filtered_TA_sites_data[filtered_TA_sites_data["ORF ID"]==g])
+        g = row.name.split("_",1)[1]
+        n = len(filtered_ttn_data[filtered_ttn_data["ORF ID"]==g])
         se1 = results1.bse["_"+g]/np.sqrt(n)
         se2 = results2.bse["_"+g]/np.sqrt(n)
         vpooled = (se1**2.0 + se2**2.0)
@@ -115,7 +140,7 @@ pval_corrected = np.full(p.shape, np.nan)
 pval_corrected[mask] = statsmodels.stats.multitest.fdrcorrection(p[mask], alpha=0.05)[1]
 Models_df["Coef Diff Adjusted Pval"] = pval_corrected
 
-Models_df["Gene+TTN States"] = "ES/ESD"
+Models_df["Gene+TTN States"] = "Uncertain"
 Models_df.loc[(Models_df["M1 Coef"]>0) & (Models_df["M1 Adjusted Pval"]<0.05),"Gene+TTN States"]="GA"
 Models_df.loc[(Models_df["M1 Coef"]<0) & (Models_df["M1 Adjusted Pval"]<0.05),"Gene+TTN States"]="GD"
 Models_df.loc[(Models_df["M1 Coef"]==0) & (Models_df["M1 Adjusted Pval"]<0.05),"Gene+TTN States"]="NE"
@@ -126,32 +151,47 @@ Models_df.loc[(Models_df["M1 Adjusted Pval"]>0.05),"Gene+TTN States"]="NE"
 #Write Models Information to CSV
 # Columns: ORF ID, ORF Name, ORF Description,M0 Coef, M0 Adj Pval
 gene_dict={} #dictionary to map information per gene
-for g in TA_site_data["ORF ID"].unique():
-	val = [g, prot_table.loc[g,"ORF Name"], prot_table.loc[g,"Description"],len(TA_site_data[TA_site_data["ORF ID"]==g]),len(TA_site_data[(TA_site_data["ORF ID"]==g) & (TA_site_data["Count"]>0)])]
-	if "_"+g in results2.params[1:]:
-		pred_counts = ttn_filtered_data[ttn_filtered_data["ORF ID"]==g]["Predicted Count"]
-		actual_counts = ttn_filtered_data[ttn_filtered_data["ORF ID"]==g]["Count"]
+for g in ttn_data["ORF ID"].unique():
+	val = [g, prot_table.loc[g,"ORF Name"], prot_table.loc[g,"Description"],len(ttn_data[ttn_data["ORF ID"]==g]),len(ttn_data[(ttn_data["ORF ID"]==g) & (ttn_data["Count"]>0)])]
+	
+	if "_"+g in results1.params[1:]:
+		pred_counts = filtered_ttn_data[filtered_ttn_data["ORF ID"]==g]["Predicted Count"]
+		actual_counts = ttn_data[ttn_data["ORF ID"]==g]["Count"]
 		val.extend([True,Models_df.loc["_"+g,"M0 Coef"],Models_df.loc["_"+g,"M0 Adjusted Pval"],Models_df.loc["_"+g,"M1 Coef"],Models_df.loc["_"+g,"M1 Adjusted Pval"], Models_df.loc["_"+g,"Coef Diff (M1-M0)"], Models_df.loc["_"+g,"Coef Diff Adjusted Pval"],np.mean(pred_counts),np.mean(actual_counts), Models_df.loc["_"+g,"Gene+TTN States"]])
 	
 	else:
-		gumbel_call = TA_site_data[TA_site_data["ORF ID"]==g]["Gumbel Call"].iloc[0]
-		actual_counts = TA_site_data[TA_site_data["ORF ID"]==g]["Count"]
-		if gumbel_call == "E": gumbel_call="ES/ESD"
-		else:gumbel_call="Uncertain"
-		val.extend([False,None, None, None, None, None,None,None,np.mean(actual_counts),gumbel_call])
-	
-	if g in hmm_stages.index:
-		val.extend([hmm_stages.loc[g,"Final Call"]])
+		actual_counts = ttn_data[ttn_data["ORF ID"]==g]["Count"]
+		gumbel_sub = ttn_data[ttn_data["ORF ID"]==g]["Gumbel Call"]
+		if len(gumbel_sub)>0 and (gumbel_sub.iloc[0]=="E"): call="ES"
+		if len(gumbel_sub)>0 and (gumbel_sub.iloc[0]=="EB"): call="ESB"
+		val.extend([False,None, None, None, None, None,None,None,np.mean(actual_counts),call])
+
+	sub_hmm = hmm_stages[hmm_stages["ORF ID"]==g]["Final Call"]
+	if len(sub_hmm)>0:
+		val.extend([sub_hmm.iloc[0]])
 	else:
 		val.extend(["Uncertain"])
+	val.extend([ttn_data[ttn_data["ORF ID"]==g]["Gumbel Call"].iloc[0]])
 	gene_dict[g] = val
+
 gene_df = pd.DataFrame.from_dict(gene_dict,orient='index')
-gene_df.columns=["ORF ID","Name","Description","Total # TA Sites","#Sites with insertions","Used in Models","Gene (M0) Coef","Gene (M0) Adj Pval","Gene+TTN (M1) Coef","Gene+TTN (M1) Adj Pval","Coef Diff (M1-M0)","Coef Diff Adj Pval","Mean STLM Predicted Count","Mean Actual Count","Gene+TTN States","HMM+NP States"]
+gene_df.columns=["ORF ID","Name","Description","Total # TA Sites","#Sites with insertions","Used in Models","Gene (M0) Coef","Gene (M0) Adj Pval","Gene+TTN (M1) Coef","Gene+TTN (M1) Adj Pval","Coef Diff (M1-M0)","Coef Diff Adj Pval","Mean STLM Predicted Count","Mean Actual Count","Gene+TTN States","HMM+NP States","Gumbel Call"]
 #print(gene_df)
+
+
+print("#Command: python3 Fitness_Esimation.py "+sys.argv[1]+" "+sys.argv[2]+" "+sys.argv[3]+" "+sys.argv[4]+" "+sys.argv[5])
+print("#Gumbel/Bernoulli Calls: Calls from the Gumbel Analysis. Genes found to be significant through Bernoulli when all sites have 0 insertions are labeled EB")
+print("#Significant size n for genes lacking insertion: "+ str(significant_n))
+
+print("#HMM States: HMM+NP model trained on data")
+print("#Gene+TTN States: Genes labeled E by the Gumbel are determined to be ES and those labeled EB by Gumbel are determined to be ESB")
+print("#Gene+TTN Summary: " + str(len(gene_df[gene_df["Gene+TTN States"]=="ES"]))+"ES "+ str(len(gene_df[gene_df["Gene+TTN States"]=="ESB"]))+"ESB "+ str(len(gene_df[gene_df["Gene+TTN States"]=="GD"]))+"GD "+ str(len(gene_df[gene_df["Gene+TTN States"]=="GA"]))+"GA "+ str(len(gene_df[gene_df["Gene+TTN States"]=="NE"]))+"NE" )
+
 
 gene_data = gene_df.to_csv(header=True, index=False).split('\n')
 vals = '\n'.join(gene_data)
 print(vals)
+
 ##########################################################################################
 # FIGURES
 filtered_gene_df = gene_df[gene_df["Used in Models"]==True]
@@ -182,7 +222,7 @@ color_dict = dict({'Insig':'gray','Uncertain':'#fdc086',
                    'GD': '#f0027f', 'GA':'#7fc97f'})
 plt.figure()
 g=sns.scatterplot(x=gene_df["Gene+TTN (M1) Coef"],y=0-np.log10(gene_df["Gene+TTN (M1) Adj Pval"]),hue=gene_df["States"],alpha=0.75,palette=color_dict)
-g.set(xlabel="Gene+TTN Model Gene Coef", ylabel="-log10 (Gene+TTN Model Adjusted Pval)",xlim=(-2.5,1.5),ylim=(0,50))
+g.set(xlabel="Gene+TTN Model Gene Coef", ylabel="-log10 (Gene+TTN Model Adjusted Pval)",xlim=(-2.5,1.5),ylim=(0,100))
 g.set_title("Gene+TTN Model")
 g.legend(handles = [Line2D([0], [0], marker='o', color='w', label='NE', markerfacecolor='#386cb0', markersize=5),
 Line2D([0], [0], marker='o', color='w', label='ES/ESD', markerfacecolor='#beaed4', markersize=5),
@@ -190,7 +230,7 @@ Line2D([0], [0], marker='o', color='w', label='GD', markerfacecolor='#f0027f', m
 Line2D([0], [0], marker='o', color='w', label='GA', markerfacecolor='#7fc97f', markersize=5),
 Line2D([0], [0], marker='o', color='w', label='Uncertain', markerfacecolor='#fdc086', markersize=5)],
 title="HMM+NP States")
-#g.plot([-2.5,0-np.log10(0.05)], [2.5, 0-np.log10(0.05)], ':k',alpha=0.4)
+g.plot([-2.5,0-np.log10(0.05)], [2.5, 0-np.log10(0.05)], ':k',alpha=0.4)
 g.axhline(0-np.log10(0.05), ls='--',color="black",alpha=0.4)
 g.axvline(0,lw=3,color="black",alpha=0.4)
 g.text(gene_df.loc["Rv3461c","Gene+TTN (M1) Coef"]+0.05, 0-np.log10(gene_df.loc["Rv3461c","Gene+TTN (M1) Adj Pval"])-0.025,"Rv3461c",bbox={'facecolor': 'white', 'alpha': 0.75, 'pad': 2},horizontalalignment='left')
@@ -202,6 +242,9 @@ g.scatter([gene_df.loc["Rv3461c","Gene+TTN (M1) Coef"],gene_df.loc["Rv0833","Gen
 ############################################################################################################################
 gene_df.loc[gene_df["HMM+NP States"]=="ES","HMM+NP States"] = "ES/ESD"
 gene_df.loc[gene_df["HMM+NP States"]=="ESD","HMM+NP States"] = "ES/ESD"
+
+gene_df.loc[gene_df["Gene+TTN States"]=="ES","Gene+TTN States"] = "ES/ESD"
+gene_df.loc[gene_df["Gene+TTN States"]=="ESB","Gene+TTN States"] = "ES/ESD"
 
 prev_states = gene_df["HMM+NP States"]
 new_states = gene_df["Gene+TTN States"]
