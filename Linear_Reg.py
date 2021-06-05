@@ -31,8 +31,7 @@ sample_name = sample_name.split('/')[-1]
 ################################################################
 LFC_y = one_hot_data['LFC']
 Count_y = np.log10(one_hot_data['Count']+0.5)
-X= one_hot_data.drop(["T_T","A_A","Coord","Count","Local Mean","LFC"],axis=1) # one hot encoded nucl at every position except T A
-
+X= one_hot_data.drop(["T_T","A_A","Coord","Count","Local Mean","LFC","ORF ID", "ORF Name"],axis=1) # one hot encoded nucl at every position except T A
 #perform cross validation and train-test the models
 LFC_R2_list= []
 Count_R2_list=[]
@@ -41,6 +40,7 @@ for train_index, test_index in kf.split(X):
 	X_train, X_test = X.loc[train_index], X.loc[test_index]
 	LFC_y_train, LFC_y_test = LFC_y.loc[train_index], LFC_y.loc[test_index]
 	Count_y_train, Count_y_test = Count_y.loc[train_index], Count_y.loc[test_index]
+	
 	#reset index of the dataframes pulled
 	X_train = X_train.reset_index(drop=True)
 	LFC_y_train = LFC_y_train.reset_index(drop=True)
@@ -49,7 +49,7 @@ for train_index, test_index in kf.split(X):
 	X_train = X_train.append(pd.DataFrame([[1 for i in range(160)]],columns=X.columns,index=[len(X_train)]))
 	LFC_y_train = LFC_y_train.append(pd.Series([1]),ignore_index=True)
 	Count_y_train = Count_y_train.append(pd.Series([1]),ignore_index=True)
-	
+	print(X_train)
 	X_train = sm.add_constant(X_train)
 	X_test = sm.add_constant(X_test)
 	# LFC Model
@@ -62,7 +62,7 @@ for train_index, test_index in kf.split(X):
 	Count_results = Count_model.fit()
 	Count_y_pred = Count_results.predict(X_test)
 	Count_R2_list.append(r2_score(Count_y_test, Count_y_pred))
-
+	
 # save models details
 from statsmodels.stats.multitest import fdrcorrection
 Models_pvalues = pd.DataFrame(Count_results.params[1:],columns=["IC Model Coef"])
