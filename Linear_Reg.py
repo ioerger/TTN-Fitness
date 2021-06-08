@@ -45,18 +45,27 @@ for train_index, test_index in kf.split(X):
 	X_train = X_train.reset_index(drop=True)
 	LFC_y_train = LFC_y_train.reset_index(drop=True)
 	Count_y_train = Count_y_train.reset_index(drop=True)
-	#turn the train and test values into dataframes
-	X_train = X_train.append(pd.DataFrame([[1 for i in range(160)]],columns=X.columns,index=[len(X_train)]))
-	LFC_y_train = LFC_y_train.append(pd.Series([1]),ignore_index=True)
-	Count_y_train = Count_y_train.append(pd.Series([1]),ignore_index=True)
-	print(X_train)
+	
+	print("Size of Data: "+str(X_train.shape)+"---"+str(X_test.shape))
+	#sums = X_train.apply(np.sum, axis=0)
+	#with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+    	#print(sums)
+	
+	#adding a row of ones
+	#X_train = X_train.append(pd.DataFrame([[1 for i in range(160)]],columns=X.columns,index=[len(X_train)]))
+	#LFC_y_train = LFC_y_train.append(pd.Series([1]),ignore_index=True)
+	#Count_y_train = Count_y_train.append(pd.Series([1]),ignore_index=True)
+	#print(X_train)
+	
 	X_train = sm.add_constant(X_train)
 	X_test = sm.add_constant(X_test)
 	# LFC Model
 	LFC_model = sm.OLS(LFC_y_train,X_train)
 	LFC_results = LFC_model.fit()
+	print(LFC_results.summary()) #print results of sumamry
 	LFC_y_pred = LFC_results.predict(X_test)
 	LFC_R2_list.append(r2_score(LFC_y_test, LFC_y_pred))
+
 	#Insertion Count Model
 	Count_model = sm.OLS(Count_y_train,X_train)
 	Count_results = Count_model.fit()
