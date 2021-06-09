@@ -25,7 +25,7 @@ def read_wig(fname):
   for line in open(fname):
     if line[0] not in "123456789": continue
     w = line.split()
-    pos,cnt = int(w[0]),int(w[1])
+    pos,cnt = int(w[0]),float(w[1])
     coords.append(pos)
     counts.append(cnt)
   return coords,counts
