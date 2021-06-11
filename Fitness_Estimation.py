@@ -13,7 +13,7 @@ from sklearn.metrics import confusion_matrix
 import math
 
 """
-python3 ../../Fitness_Estimation.py H37RvBD1_TTN.csv H37RvBD1_hmm_stages.csv H37RvBD1.pickle H37RvBD1.prot_table Gumbel_pred.txt > Gene_Essentiality.csv 
+python3 ../../Fitness_Estimation.py H37RvBD1_TTN.csv H37RvBD1_hmm.csv (hmm or hmm+np) H37RvBD1.pickle H37RvBD1.prot_table Gumbel_pred.txt > Gene_Essentiality.csv 
 """
 ##################################################################################
 # Read in Data
