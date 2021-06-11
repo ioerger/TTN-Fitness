@@ -1,17 +1,26 @@
 # TAInsertionPreferences
 
-#note the difference in python and python3
-1. python compute_LFCs.py <genome.fna> <genome.prot_table> <counts.wig>(with 1 or more wig files) > LFCs.txt
-2. python3 LFCs_to_TTN.py LFCs.txt > TTN.csv
-   python3 LFCs_to_oneHotEncoded.py LFCs.txt > oneHotEncoded.csv
-3. python3 STLM_train.py TTN.csv model.pickle(to save model to, will create tar file)
-4. python3 STLM_test.py model.pickle trainTTN.csv testTTN.csv > STLM_predictions.csv
+
+---- Train STLM model ----
+python compute_LFCs.py <.fna file> <annotation .prot_table> <.wig file 1> <.wig file 2> <.wig file 3> ...<wig file n>  > <LFC file>
+python3 LFCs_to_TTN.py <LFC file> > <TTN .csv>
+python3 STLM.py <TTN .csv> <.pickle file to save to> #pickle file created wil tared
+
+
+
+
+---- Test STLM model ---- 
+-> assuming you have a trained model in a pickle file format as well as a TTN csv file of the strain to predict
+
+python3 STLM_test.py <.pickle file without the tar.gz suffix> <train TTN .csv file> <test TTN .csv> > <output file to write the STLM predictions to> 
+
+
+
+
+--- Fitness Estimation ----
+-> assume you have a file with the STLM predictions of the genes you are trying to estimate the fitness of 
 
 transit hmm <comma-separated .wig files> <annotation .prot_table or GFF3> <output file>
-transit gumbel <comma-separated .wig files> <annotation .prot_table or GFF3> <output file> [Optional Arguments]
+transit gumbel <comma-separated .wig files> <annotation .prot_table or GFF3> <output file> 
+python3 Fitness_Estimation.py <TTN .csv> <hmm+np file> < .pickle file without the .tar.gz suffix> <annotation .prot_table> <output gumbel file> > <output file to save Gene Essentiality predictions>
 
-5. python3 Fitness_Estimation.py TTN.csv hmm_genes.csv model.pickle prot_table Gumbel_predictions.txt > Gene_Essentiality.csv
-	- hmm_genes can be the transit generated file or the hmm+np file
-
-6. python3 Linear_Reg.py oneHotEncoded.csv > Reg_model_descriptions.csv
-7. python3 Prelim_Analysi.py

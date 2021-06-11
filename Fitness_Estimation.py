@@ -47,8 +47,8 @@ hmm_stages.drop(columns=["Orf Info"], inplace=True)
 # Regression Pickle
 with tarfile.open(sys.argv[3]+'.tar.gz', 'r') as t:
 	t.extractall('')
-reg = sm.load(os.path.basename(sys.argv[3]))
-os.remove(os.path.basename(sys.argv[3]))
+reg = sm.load(sys.argv[3])
+os.remove(sys.argv[3])
 
 # Prot Table
 prot_table = pd.read_csv(sys.argv[4],sep='\t',header=None, names= ["Description", "X1","X2","X3","X4","X5","X6","ORF Name","ORF ID","X9","X10"])

@@ -20,11 +20,10 @@ python3 STLM_test.py model.pickle trainTTN.csv testTTN.csv > predictions.csv
 6. Plot Predicted vs. Actual Counts
 7. Output the compilation of data
 """
-
 with tarfile.open(sys.argv[1]+'.tar.gz', 'r') as t:
     t.extractall('')
-reg = sm.load(os.path.basename(sys.argv[1]))
-os.remove(os.path.basename(sys.argv[1]))
+reg = sm.load(sys.argv[1])
+os.remove(sys.argv[1])
 
 train_data = pd.read_csv(sys.argv[2])
 train_data = train_data[train_data["State"]!="ES"]
