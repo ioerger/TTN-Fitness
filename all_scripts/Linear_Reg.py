@@ -46,33 +46,30 @@ for train_index, test_index in kf.split(X):
 	LFC_y_train = LFC_y_train.reset_index(drop=True)
 	Count_y_train = Count_y_train.reset_index(drop=True)
 	
-	print("Size of Data: "+str(X_train.shape)+"---"+str(X_test.shape))
-	#sums = X_train.apply(np.sum, axis=0)
-	#with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    	#print(sums)
-	
 	#adding a row of ones
-	#X_train = X_train.append(pd.DataFrame([[1 for i in range(160)]],columns=X.columns,index=[len(X_train)]))
-	#LFC_y_train = LFC_y_train.append(pd.Series([1]),ignore_index=True)
-	#Count_y_train = Count_y_train.append(pd.Series([1]),ignore_index=True)
-	#print(X_train)
+	X_train = X_train.append(pd.DataFrame([[1 for i in range(160)]],columns=X.columns,index=[len(X_train)]))
+	LFC_y_train = LFC_y_train.append(pd.Series([1]),ignore_index=True)
+	Count_y_train = Count_y_train.append(pd.Series([1]),ignore_index=True)
 	
 	X_train = sm.add_constant(X_train)
 	X_test = sm.add_constant(X_test)
+	
 	# LFC Model
 	LFC_model = sm.OLS(LFC_y_train,X_train)
 	LFC_results = LFC_model.fit()
-	print(LFC_results.summary()) #print results of sumamry
+#	print(LFC_results.summary()) #print results of sumamry
 	LFC_y_pred = LFC_results.predict(X_test)
 	LFC_R2_list.append(r2_score(LFC_y_test, LFC_y_pred))
 
 	#Insertion Count Model
 	Count_model = sm.OLS(Count_y_train,X_train)
 	Count_results = Count_model.fit()
+#	print(Count_results.summary())
 	Count_y_pred = Count_results.predict(X_test)
 	Count_R2_list.append(r2_score(Count_y_test, Count_y_pred))
 	
 # save models details
+#how many coefficients before and after adjustment are siginiicant?
 from statsmodels.stats.multitest import fdrcorrection
 Models_pvalues = pd.DataFrame(Count_results.params[1:],columns=["IC Model Coef"])
 Models_pvalues["IC Model Pvalues"] = Count_results.pvalues[1:]
@@ -85,7 +82,7 @@ models_data = Models_pvalues.to_csv(header=True, index=False).split('\n')
 vals = '\n'.join(models_data)
 print(vals)
 
-Count_insig = Models_pvalues[Models_pvalues["IC Model Adjusted Pvalues"]>0.05]
+Count_insig = Models_pvalues[Models_pvalues["IC Model Adjusted Pvalues"]>0.05] #check that this is correspondes btw sig coef and peaks over the line
 LFC_insig = Models_pvalues[Models_pvalues["LFC Model Adjusted Pvalues"]>0.05]
 #######################################################################################################
 # LFC Plot
