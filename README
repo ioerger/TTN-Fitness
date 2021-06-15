@@ -43,5 +43,3 @@ python3 Fitness_Estimation.py out/H37Rv_TTN.csv demodata/H37Rv/H37Rv_hmm_np.csv 
 
 
 
--------- Estimating Fitness of genes in abscessus (with HMM) ----------------------
-TO DISCUSS
