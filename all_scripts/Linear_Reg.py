@@ -55,19 +55,23 @@ for train_index, test_index in kf.split(X):
 	X_test = sm.add_constant(X_test)
 	
 	# LFC Model
+	
 	LFC_model = sm.OLS(LFC_y_train,X_train)
 	LFC_results = LFC_model.fit()
-#	print(LFC_results.summary()) #print results of sumamry
 	LFC_y_pred = LFC_results.predict(X_test)
-	LFC_R2_list.append(r2_score(LFC_y_test, LFC_y_pred))
+	LFC_R2_list.append(r2_score(LFC_y_test, LFC_y_pred)) #check getting same answers
 
 	#Insertion Count Model
 	Count_model = sm.OLS(Count_y_train,X_train)
 	Count_results = Count_model.fit()
-#	print(Count_results.summary())
 	Count_y_pred = Count_results.predict(X_test)
 	Count_R2_list.append(r2_score(Count_y_test, Count_y_pred))
-	
+
+X_new = sm.add_constant(X)
+LFC_model = sm.OLS(LFC_y,X_new)
+LFC_results = LFC_model.fit()
+Count_model = sm.OLS(Count_y,X_new)
+Count_results = Count_model.fit()
 # save models details
 #how many coefficients before and after adjustment are siginiicant?
 from statsmodels.stats.multitest import fdrcorrection
@@ -84,6 +88,7 @@ print(vals)
 
 Count_insig = Models_pvalues[Models_pvalues["IC Model Adjusted Pvalues"]>0.05] #check that this is correspondes btw sig coef and peaks over the line
 LFC_insig = Models_pvalues[Models_pvalues["LFC Model Adjusted Pvalues"]>0.05]
+
 #######################################################################################################
 # LFC Plot
 #Plot the last train-test split 
