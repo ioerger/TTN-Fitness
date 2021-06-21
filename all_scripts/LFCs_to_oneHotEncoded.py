@@ -33,7 +33,8 @@ rev_complement_columns = list(expanded_data.columns)[22:43]
 rev_complement_columns.reverse()
 rev_df = expanded_data[rev_complement_columns].applymap(lambda x: complement(x))
 orig_df = expanded_data[list(expanded_data.columns)[0:22]]
-expanded_data = pd.concat([orig_df, rev_df], axis=1)
+up_rc_down_df = pd.concat([orig_df, rev_df], axis=1)
+up_rc_down_df.columns = [-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,'T','A',1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 
 #one-hot-encoded
 expanded_data = pd.get_dummies(data=expanded_data, columns=expanded_data.columns)
