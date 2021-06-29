@@ -12,7 +12,7 @@ from sklearn.model_selection import KFold
 '''
 python3 tetranucl.csv pickleFileLoc(must have .pickle at the end) > TTN_descr.txt
 
-1. Read in the TTN csv
+1. Read in the TTN csv and filter out essential sites
 2. Perform 10 fold cross validation to train and test the model
 3. Print details about the TTN coefs 
 3. Plot predict vs. actual LFC

@@ -8,13 +8,12 @@ python3 STLM_train.py <TTN .csv> <.pickle file to save to> #pickle file created 
 
 
 ---- Test STLM model ---- 
--> assuming you have a trained model in a pickle file format as well as a TTN csv file of the strain to predict
-
+[assuming you have a trained model in a pickle.tar.gz file format as well as a csv file of the TTN per site of the strain to predict]
 python3 STLM_test.py <.pickle file without the tar.gz suffix> <train TTN .csv file> <test TTN .csv> > <output file to write the STLM predictions to> 
 
 
 --- Fitness Estimation ----
--> assume you have a file with the STLM predictions of the genes you are trying to estimate the fitness of 
+[assuming you have an hmm+np file of the genome you want to improve the prediction of] 
 
 transit hmm <comma-separated .wig files> <annotation .prot_table or GFF3> <output file>
 transit gumbel <comma-separated .wig files> <annotation .prot_table or GFF3> <output file> 
@@ -24,15 +23,17 @@ python3 Fitness_Estimation.py <TTN .csv> <hmm+np file> < .pickle file without th
 ==============================================================================================================================================
 ==============================================================================================================================================
 
-------------- Getting expected counts of abscessus data from a STLM model trained on H37Rv data -------------------
+------------- Getting expected counts of abscessus ATCC-19977 using our trained STLM -------------------
 python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/H37Rv_mean.wig > out/H37Rv_LFC.txt
-python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig > out/abscessus_LFC.txt
+python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
+
+python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/*.wig > out/abscessus_LFC.txt
 python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > out/H37Rv_TTN.csv
 python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
 python3 STLM_test.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv_TTN.csv out/abscessus_TTN.csv > out/abscessus_STLM_predictions.csv
 
 
---------- Retraining an STLM model on abscessus --------------------
+--------- Retraining STLM on abscessus --------------------
 python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig > out/abscessus_LFC.txt
 python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
 python3 STLM_train.py out/H37Rv_TTN.csv out/STLM_model_trained_on_abscessus.pickle 

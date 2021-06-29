@@ -6,7 +6,7 @@ import seaborn as sns
 
 """
 python3 LFCs.txt > TTN.csv
-1. Preprocess LFC data to exclude the sites marked essential and expand the nucleotides surrounding the TA site
+1. Preprocess LFC data to expand the nucleotides surrounding the TA site
 2. reverse complement the upstream sequence
 3. Combine the downstream and RC upstream 
 4. For every row, create the 256-bit vector setting the upstream and downtream TTN
