@@ -215,11 +215,11 @@ filtered_gene_df = gene_df[gene_df["Used in Models"]==True]
 g = sns.jointplot(data=filtered_gene_df, x="Gene (M0) Coef",y="Gene+TTN (M1) Coef",hue="HMM+NP States", alpha=0.75,palette = dict({'Uncertain':'#fdc086','NE': '#386cb0','ES': '#beaed4','ESD': '#beaed4','GD': '#f0027f', 'GA':'#7fc97f'}))
 g.plot_marginals(sns.histplot,bins=50,kde=True)
 g.ax_joint.text(gene_df.loc["Rv3461c","Gene (M0) Coef"]+0.05, gene_df.loc["Rv3461c","Gene+TTN (M1) Coef"]-0.025,"Rv3461c",bbox={'facecolor': 'white', 'alpha': 0.75, 'pad': 2},horizontalalignment='left')
-g.ax_joint.text(gene_df.loc["Rv1091","Gene (M0) Coef"]+0.05, gene_df.loc["Rv1091","Gene+TTN (M1) Coef"]-0.025,"Rv1091",bbox={'facecolor': 'white', 'alpha': 0.75, 'pad': 2},horizontalalignment='left')
+g.ax_joint.text(gene_df.loc["Rv0833","Gene (M0) Coef"]+0.05, gene_df.loc["Rv0833","Gene+TTN (M1) Coef"]-0.025,"Rv0833",bbox={'facecolor': 'white', 'alpha': 0.75, 'pad': 2},horizontalalignment='left')
 g.ax_joint.set(xlim=(-3.5,2.5),ylim=(-3.5,2.5))
 g.ax_joint.plot([-3.5,2.5], [-3.5,2.5], ':k',alpha=0.4)
 
-g.ax_joint.scatter([gene_df.loc["Rv3461c","Gene (M0) Coef"],gene_df.loc["Rv1091","Gene (M0) Coef"]],[gene_df.loc["Rv3461c","Gene+TTN (M1) Coef"],gene_df.loc["Rv1091","Gene+TTN (M1) Coef"]], alpha=1.0, color="none",edgecolor="black")
+g.ax_joint.scatter([gene_df.loc["Rv3461c","Gene (M0) Coef"],gene_df.loc["Rv0833","Gene (M0) Coef"]],[gene_df.loc["Rv3461c","Gene+TTN (M1) Coef"],gene_df.loc["Rv0833","Gene+TTN (M1) Coef"]], alpha=1.0, color="none",edgecolor="black")
 g.ax_joint.legend(handles = [Line2D([0], [0], marker='o', color='w', label='NE', markerfacecolor='#386cb0', markersize=5),
 Line2D([0], [0], marker='o', color='w', label='ES/ESD', markerfacecolor='#beaed4', markersize=5),
 Line2D([0], [0], marker='o', color='w', label='GD', markerfacecolor='#f0027f', markersize=5),
@@ -249,8 +249,8 @@ title="HMM+NP States")
 g.axhline(0-np.log10(0.05), ls='--',color="black",alpha=0.4)
 g.axvline(0,lw=3,color="black",alpha=0.4)
 g.text(gene_df.loc["Rv3461c","Gene+TTN (M1) Coef"]+0.03, 0-np.log10(gene_df.loc["Rv3461c","Gene+TTN (M1) Adj Pval"])-0.025,"Rv3461c",bbox={'facecolor': 'white', 'alpha': 0.75, 'pad': 2},horizontalalignment='left')
-g.text(gene_df.loc["Rv1091","Gene+TTN (M1) Coef"]+0.03, 0-np.log10(gene_df.loc["Rv1091","Gene+TTN (M1) Adj Pval"])-0.025,"Rv1091",bbox={'facecolor': 'white', 'alpha': 0.75, 'pad': 2},horizontalalignment="left")
-g.scatter([gene_df.loc["Rv3461c","Gene+TTN (M1) Coef"],gene_df.loc["Rv1091","Gene+TTN (M1) Coef"]],[0-np.log10(gene_df.loc["Rv3461c","Gene+TTN (M1) Adj Pval"]),0-np.log10(gene_df.loc["Rv1091","Gene+TTN (M1) Adj Pval"])], color="none",edgecolor="black")
+g.text(gene_df.loc["Rv0833","Gene+TTN (M1) Coef"]+0.03, 0-np.log10(gene_df.loc["Rv0833","Gene+TTN (M1) Adj Pval"])-0.025,"Rv0833",bbox={'facecolor': 'white', 'alpha': 0.75, 'pad': 2},horizontalalignment="left")
+g.scatter([gene_df.loc["Rv3461c","Gene+TTN (M1) Coef"],gene_df.loc["Rv0833","Gene+TTN (M1) Coef"]],[0-np.log10(gene_df.loc["Rv3461c","Gene+TTN (M1) Adj Pval"]),0-np.log10(gene_df.loc["Rv0833","Gene+TTN (M1) Adj Pval"])], color="none",edgecolor="black")
 
 #plt.show()
 
