@@ -13,7 +13,7 @@ from sklearn.metrics import confusion_matrix
 import math
 
 """
-python3 ../../Fitness_Estimation.py STLM_output H37RvBD1_hmm.csv (hmm or hmm+np) H37RvBD1.prot_table Gumbel_pred.txt > Gene_Essentiality.csv 
+python3 ../../Fitness_Estimation.py TTN.csv H37RvBD1_hmm.csv reg.pickle H37RvBD1.prot_table Gumbel_pred.txt > Gene_Essentiality.csv 
 """
 ##################################################################################
 # Read in Data
@@ -23,27 +23,32 @@ ttn_data = pd.read_csv(sys.argv[1])
 skip_count =0
 hmm_file = open(sys.argv[2],'r')
 for line in hmm_file.readlines():
-	if line.startswith('#'):skip_count = skip_count+1
-	else:break
+        if line.startswith('#'):skip_count = skip_count+1
+        else:break
 hmm_file.close()
- 
-#specifically HMM+NP file 
 
+#specifically HMM+NP file 
 hmm_stages = pd.read_csv(sys.argv[2],sep=',', skiprows=skip_count,names=["ORF ID","Name","Description","Number of TA Sites","Number of Permissive (P) Sites","Number of Non-Permissive (NP) Sites","Number of Sites Belonging to Essential State","Number of Sites Belonging to Growth-Defect State","Number of Sites Belonging to Non-Essential State","Number of Sites Belonging to Growth-Advantage State","Fraction of Sites with Insertions","Mean Normalized Read-Count At Non-Zero Sites","Final Call"])
 
+# Regression Pickle
+with tarfile.open(sys.argv[3]+'.tar.gz', 'r') as t:
+        t.extractall('')
+reg = sm.load(sys.argv[3])
+os.remove(sys.argv[3])
+
 # Prot Table
-prot_table = pd.read_csv(sys.argv[3],sep='\t',header=None, names= ["Description", "X1","X2","X3","X4","X5","X6","ORF Name","ORF ID","X9","X10"])
+prot_table = pd.read_csv(sys.argv[4],sep='\t',header=None, names= ["Description", "X1","X2","X3","X4","X5","X6","ORF Name","ORF ID","X9","X10"])
 prot_table.set_index("ORF ID", drop=True, inplace=True)
 
 # Gumbel Predictions
 skip_count =0
-gumbel_file = open(sys.argv[4],'r')
+gumbel_file = open(sys.argv[5],'r')
 for line in gumbel_file.readlines():
         if line.startswith('#'):skip_count = skip_count+1
         else:break
 gumbel_file.close()
 
-gumbel_pred = pd.read_csv(sys.argv[4],sep='\t',skiprows=skip_count, names =["Orf","Name","Desc","k","n","r","s","zbar","Call"],dtype = str)
+gumbel_pred = pd.read_csv(sys.argv[5],sep='\t',skiprows=skip_count, names =["Orf","Name","Desc","k","n","r","s","zbar","Call"],dtype = str)
 ###################################################################################
 #Filter Loaded  Data
 saturation = len(ttn_data[ttn_data["Count"]>0])/len(ttn_data)
@@ -62,11 +67,6 @@ def gumbel_bernoulli_calls(data_df):
 		calls.append(gene_call)
 	return calls
 	
-def calcPredictedCounts(row):
-        predCount = row["Local Mean"]*math.pow(2,row["Pred LFC"])
-        return predCount
-
-ttn_data["Predicted Count"]=ttn_data.apply(calcPredictedCounts,axis=1)
 ttn_data= ttn_data[ttn_data["ORF ID"]!="igr"]
 ttn_data["Gumbel/Bernoulli Call"] = gumbel_bernoulli_calls(ttn_data)
 filtered_ttn_data = ttn_data[ttn_data["Gumbel/Bernoulli Call"]!="E"]
@@ -77,7 +77,7 @@ filtered_ttn_data = filtered_ttn_data.reset_index(drop=True)
 ##########################################################################################
 #Linear Regression
 gene_one_hot_encoded= pd.get_dummies(filtered_ttn_data["ORF ID"],prefix='')
-ttn_vectors = filtered_ttn_data.drop(["Pred LFC","Corrected Pred LFC","Corrected LFC","Predicted Count","Coord","Count","ORF ID","ORF Name","Local Mean","LFC","State", "Gumbel/Bernoulli Call"],axis=1)
+ttn_vectors = filtered_ttn_data.drop(["Coord","Count","ORF ID","ORF Name","Local Mean","LFC","State", "Gumbel/Bernoulli Call"],axis=1)
 
 X1 = pd.concat([gene_one_hot_encoded],axis=1)
 X1 = sm.add_constant(X1)
@@ -86,6 +86,16 @@ X2 = sm.add_constant(X2)
 Y = np.log10(filtered_ttn_data["Count"]+0.5)
 results1 = sm.OLS(Y,X1).fit()
 results2 = sm.OLS(Y,X2).fit()
+
+X3 = pd.concat([ttn_vectors],axis=1)
+X3 = sm.add_constant(X3)
+ypred = reg.predict(X3)
+filtered_ttn_data["Pred LFC"] = ypred
+
+def calcPredictedCounts(row):
+        predCount = row["Local Mean"]*math.pow(2,row["Pred LFC"])
+        return predCount
+filtered_ttn_data["Predicted Count"]=filtered_ttn_data.apply(calcPredictedCounts,axis=1)
 ##########################################################################################
 #create Models Summary df 
 def calcpval(row):
@@ -176,7 +186,6 @@ for g in ttn_data["ORF ID"].unique():
 	else:
 		if "_"+g in Models_df.index: gene_ttn_call = Models_df.loc["_"+g,"Gene+TTN States"]
 		else: 
-			print(g)
 			gene_ttn_call = "Uncertain"
 
 	gene_dict[g] = [g,orfName,orfDescription,numTAsites,above0TAsites,used,M0_coef,M0_adj_pval,M1_coef,M1_adj_pval,coef_diff,coef_diff_pval,mean_pred_counts,mean_actual_counts,gumbel_call,hmm_call,gene_ttn_call]
