@@ -246,7 +246,7 @@ g.scatter([gene_df.loc["Rv3461c","Gene+TTN (M1) Coef"],gene_df.loc["Rv0833","Gen
 #plt.show()
 
 gene_df.loc[gene_df["HMM+NP States"]=="ESD","HMM+NP States"] = "ES/ESD"
-
+gene_df.loc[gene_df["HMM+NP States"]=="ES","HMM+NP States"] = "ES/ESD"
 gene_df.loc[gene_df["Gene+TTN States"]=="ES","Gene+TTN States"] = "ES/ESD"
 gene_df.loc[gene_df["Gene+TTN States"]=="ESB","Gene+TTN States"] = "ES/ESD"
 
