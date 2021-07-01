@@ -87,46 +87,12 @@ for c in combos:
         c_tetra_train= train_data[train_data[c]==1]
         corrected_train_c_averages.append(c_tetra_train["Corrected Train LFC"].mean())
 
-############################################################
-# Plot predicted vs. actual LFC
-############################################################
-fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
-fig.suptitle("Test Genome: "+str(test_sample_name))
-ax1.set_title("Predicted vs. Actual LFC")
-ax1.scatter(y,ypred,s=1,c='green',alpha=0.5)
-ax1.set_xlabel('Actual')
-ax1.set_ylabel('Predicted')
-ax1.text(-7, 7, "R2: "+ str(r2score), fontsize=11)
-ax1.axhline(y=0, color='k')
-ax1.axvline(x=0, color='k')
-ax1.plot([-8,8], [-8,8], 'k--', alpha=0.75, zorder=1)
-ax1.set_xlim(-8,8)
-ax1.set_ylim(-8,8)
-ax1.grid(zorder=0)
-#plt.show()
 
-
-############################################################
-# Predicted vs Observed Counts Graph
-############################################################
 def calcPredictedCounts(row):
 	predCount = row["Local Mean"]*math.pow(2,row["Pred LFC"])
 	return predCount
 test_data["Predicted Count"]=test_data.apply(calcPredictedCounts,axis=1)
 
-fig, (ax3) = plt.subplots(1, sharex=True, sharey=True)
-fig.suptitle(str(test_sample_name)+" Observed vs Predicted Counts")
-ax3.scatter(np.log10(test_data["Count"]),np.log10(test_data["Predicted Count"]),s=1,c='green',alpha=0.5)
-ax3.set_xlabel('log Observed Count')
-ax3.set_ylabel('log Predicted Count')
-ax3.axhline(y=0, color='k')
-ax3.axvline(x=0, color='k')
-ax3.grid(zorder=0)
-ax3.legend()
-#plt.show()
-
-############################################################
-# Corrected Graphs
 ############################################################
 ##### Correction Scatter Graph #######
 fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
@@ -143,6 +109,7 @@ ax1.plot([-3,3], [-3,3], 'k--', alpha=0.25, zorder=1)
 ax1.legend()
 ax1.grid(zorder=0)
 #plt.show()
+
 ####### Corrected Predicted vs Actual LFC ########
 fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
 fig.suptitle("Test Genome: "+str(test_sample_name))

@@ -177,3 +177,6 @@ print("#Gene+TTN Summary: " + str(len(gene_df[gene_df["Gene+TTN States"]=="ES"])
 
 
 gene_data = gene_df.to_csv(header=True, index=False).split('\n')
+vals = '\n'.join(gene_data)
+print(vals)
+
