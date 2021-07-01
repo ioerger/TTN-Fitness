@@ -13,11 +13,8 @@ python3 STLM_test.py <.pickle file without the tar.gz suffix> <train TTN .csv fi
 
 
 --- Fitness Estimation ----
-[assuming you have an hmm+np file of the genome you want to improve the prediction of] 
-
-transit hmm <comma-separated .wig files> <annotation .prot_table or GFF3> <output file>
 transit gumbel <comma-separated .wig files> <annotation .prot_table or GFF3> <output file> 
-python3 Fitness_Estimation.py <TTN .csv> <hmm+np file> < .pickle file without the .tar.gz suffix> <annotation .prot_table> <output gumbel file> > <output file to save Gene Essentiality predictions>
+python3 Fitness_Estimation.py <STLM output.csv> <annotation .prot_table> <output gumbel file> > <output file to save Gene Essentiality predictions>
 
 
 ==============================================================================================================================================
@@ -39,8 +36,8 @@ python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
 python3 STLM_train.py out/H37Rv_TTN.csv out/STLM_model_trained_on_abscessus.pickle 
 
 --------- Estimating Fitness of genes in H37Rv (with HMM+NP) ----------------
-transit gumbel demodata/H37Rv/H37Rv_mean.wig demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv
-python3 Fitness_Estimation.py out/H37Rv_TTN.csv demodata/H37Rv/H37Rv_hmm_np.csv demodata/STLM_model_trained_onH37Rv.pickle demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv > Fitness_Estimation_of_H37Rv_genes.csv
+transit gumbel <comma seperaated list of wig files in demodata/H37Rv> demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv
+python3 Fitness_Estimation.py out/STLM_H37Rv_predictions.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv > Fitness_Estimation_of_H37Rv_genes.csv
 
 
 

@@ -134,8 +134,6 @@ for g in ttn_data["ORF ID"].unique():
 	#Actual Count
 	actual_counts = ttn_data[ttn_data["ORF ID"]==g]["Count"]
 	mean_actual_counts = np.mean(actual_counts)
-	#Gumbel-Bernoulli Call
-	gumbel_call = gumbel_pred[gumbel_pred["Orf"]==g]["Call"].iloc[0]
 	#M0/M1 info
 	if "_"+g in Models_df.index:
 		used=True
@@ -160,10 +158,10 @@ for g in ttn_data["ORF ID"].unique():
 	else:
 		if "_"+g in Models_df.index: gene_ttn_call = Models_df.loc["_"+g,"Gene+TTN States"]
 		else: gene_ttn_call = "Uncertain"
-	gene_dict[g] = [g,orfName,orfDescription,numTAsites,above0TAsites,used,M0_coef,M0_adj_pval,M1_coef,M1_adj_pval,coef_diff,coef_diff_pval,mean_pred_counts,mean_actual_counts,gumbel_call,gene_ttn_call]
+	gene_dict[g] = [g,orfName,orfDescription,numTAsites,above0TAsites,used,M0_coef,M0_adj_pval,M1_coef,M1_adj_pval,coef_diff,coef_diff_pval,mean_pred_counts,mean_actual_counts,gene_ttn_call]
 
 gene_df = pd.DataFrame.from_dict(gene_dict,orient='index')
-gene_df.columns=["ORF ID","Name","Description","Total # TA Sites","#Sites with insertions","Used in Models","Gene (M0) Coef","Gene (M0) Adj Pval","Gene+TTN (M1) Coef","Gene+TTN (M1) Adj Pval","Coef Diff (M1-M0)","Coef Diff Adj Pval","Mean STLM Predicted Count","Mean Actual Count","Gumbel Call", "Gene+TTN States"]
+gene_df.columns=["ORF ID","Name","Description","Total # TA Sites","#Sites with insertions","Used in Models","Gene (M0) Coef","Gene (M0) Adj Pval","Gene+TTN (M1) Coef","Gene+TTN (M1) Adj Pval","Coef Diff (M1-M0)","Coef Diff Adj Pval","Mean STLM Predicted Count","Mean Actual Count", "Gene+TTN States"]
 #print(gene_df)
 
 
