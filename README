@@ -1,5 +1,20 @@
-# TAInsertionPreferences
+This software is an implementation of an algorithm for predicting insertion counts based on nucleotide patterns surrounfign TA dinulceotide sites using the Himar1 transposon
+The input files are wig files containing the insertion counts at TA site coordinates in a bacterial genome. It generates an output of essentiality of genes based on comparing observed counts to expected counts
 
+** STLM
+** The model is trained on Insertion counts/LFCs of an exmaple dataset and generate the coefcients of the TTN in a linear model.
+**similar sentence for testing (change name to prediction)
+
+** Fitness estimation
+** add sentence about how the model is used to categorize the genes passed in into the four categories. Specificify cirteria and categories. 
+
+
+
+
+
+
+
+# TAInsertionPreferences
 
 ---- Train STLM model ----
 python compute_LFCs.py <.fna file> <annotation .prot_table> <.wig file 1> <.wig file 2> <.wig file 3> ...<wig file n>  > <LFC file>
