@@ -1,0 +1,18 @@
+1. For any new dataset, there are three important files:
+  a. wig files which contain the counts at coordinates of TA sites
+      i. for H37Rv, there are 14 different wigs to represetn datasets from independent libraries, like WX1.wig, Cara.wig, etc.,
+      ii. FORMAT : coordinate <space> count 
+  b. the genome sequence itself (FastA file, its critical that the coordinates are taken from the same version of the genome provided here)
+      i. H37RvBD1.fna [make sure file has this name too]. (Ascession Number her NC_0001 something like that)
+  c. the genome annotation (prot_table. Critical to be same)
+      i. H37RvBD1.prot_table
+      ii. Tabseperated, without header. Columns are: 
+        1. descriptions
+        2. start coord
+        3. end coord
+        4. strand
+        5. protein length in amino acids
+        6. dont care [variable X]
+        7. dont care [vaiable Y]
+        8. ORF name
+        9. ORF ID
