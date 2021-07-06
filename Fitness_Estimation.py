@@ -17,7 +17,14 @@ python3 ../../Fitness_Estimation.py STLM_output H37RvBD1.prot_table Gumbel_pred.
 """
 ##################################################################################
 # Read in Data
-ttn_data = pd.read_csv(sys.argv[1])
+skip_count =0
+ttn_data = open(sys.argv[1],'r')
+for line in ttn_data.readlines():
+        if line.startswith('#'):skip_count = skip_count+1
+        else:break
+ttn_data.close()
+
+ttn_data = pd.read_csv(sys.argv[1],skiprows=skip_count)
 
 # Prot Table
 prot_table = pd.read_csv(sys.argv[3],sep='\t',header=None, names= ["Description", "X1","X2","X3","X4","X5","X6","ORF Name","ORF ID","X9","X10"])
@@ -32,6 +39,7 @@ for line in gumbel_file.readlines():
 gumbel_file.close()
 
 gumbel_pred = pd.read_csv(sys.argv[4],sep='\t',skiprows=skip_count, names =["Orf","Name","Desc","k","n","r","s","zbar","Call"],dtype = str)
+
 ###################################################################################
 #Filter Loaded  Data
 saturation = len(ttn_data[ttn_data["Count"]>0])/len(ttn_data)
@@ -59,7 +67,6 @@ ttn_data= ttn_data[ttn_data["ORF ID"]!="igr"]
 ttn_data["Gumbel/Bernoulli Call"] = gumbel_bernoulli_calls(ttn_data)
 filtered_ttn_data = ttn_data[ttn_data["Gumbel/Bernoulli Call"]!="E"]
 filtered_ttn_data= filtered_ttn_data[filtered_ttn_data["Gumbel/Bernoulli Call"]!="EB"]
-filtered_ttn_data = filtered_ttn_data[filtered_ttn_data["State"]!="ES"]
 filtered_ttn_data = filtered_ttn_data.reset_index(drop=True)
 
 ##########################################################################################
@@ -74,6 +81,7 @@ X2 = sm.add_constant(X2)
 Y = np.log10(filtered_ttn_data["Count"]+0.5)
 results1 = sm.OLS(Y,X1).fit()
 results2 = sm.OLS(Y,X2).fit()
+
 ##########################################################################################
 #create Models Summary df 
 def calcpval(row):

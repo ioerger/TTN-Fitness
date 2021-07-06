@@ -15,11 +15,9 @@ python3 STLM_test.py model.pickle trainTTN.csv testTTN.csv > predictions.csv
 1. Load in model from the pickle file
 2. Load in the csv
 3. Predict test data LFC using the loaded model
-4. Plot overall predicted vs. actual LFC of the test data
-5. Plot the mean predicted vs. mean actual LFC
-6. Plot Predicted vs. Actual Counts
-7. Output the compilation of data
+4. Output the compilation of data
 """
+
 with tarfile.open(sys.argv[1]+'.tar.gz', 'r') as t:
     t.extractall('')
 reg = sm.load(sys.argv[1])
@@ -94,39 +92,11 @@ def calcPredictedCounts(row):
 test_data["Predicted Count"]=test_data.apply(calcPredictedCounts,axis=1)
 
 ############################################################
-##### Correction Scatter Graph #######
-fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
-fig.suptitle(str(train_sample_name)+"--"+str(test_sample_name)+ " TetraNucl MeanCount")
-ax1.scatter(train_c_averages,test_c_averages,s=5,c='green',alpha=0.75,label="original")
-ax1.scatter(corrected_train_c_averages,test_c_averages,s=5,c='blue',alpha=0.75, label='adjusted')
-ax1.set_xlabel(str(train_sample_name)+' LFC Average')
-ax1.set_ylabel(str(test_sample_name)+' LFC Average')
-ax1.text(-3, 1.5, "Original R2: "+ str(round(r2_score(y,ypred),4)), fontsize=10)
-ax1.text(-3, 1.0, "Adjusted R2: "+ str(round(r2_score(y,corrected_ypred),4)), fontsize=10)
-ax1.axhline(y=0, color='k')
-ax1.axvline(x=0, color='k')
-ax1.plot([-3,3], [-3,3], 'k--', alpha=0.25, zorder=1)
-ax1.legend()
-ax1.grid(zorder=0)
-#plt.show()
-
-####### Corrected Predicted vs Actual LFC ########
-fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
-fig.suptitle("Test Genome: "+str(test_sample_name))
-ax1.set_title("CORRECTED Predicted vs. Actual LFC")
-ax1.scatter(y,corrected_ypred,s=1,c='green',alpha=0.5)
-ax1.set_xlabel('Actual')
-ax1.set_ylabel('Corrected Predicted')
-ax1.text(-7, 7, "R2: "+ str(r2score), fontsize=11)
-ax1.axhline(y=0, color='k')
-ax1.axvline(x=0, color='k')
-ax1.plot([-8,8], [-8,8], 'k--', alpha=0.75, zorder=1)
-ax1.set_xlim(-8,8)
-ax1.set_ylim(-8,8)
-ax1.grid(zorder=0)
-plt.show()
-
+# Print to Output
+############################################################
 # print to output
+print("#Note that sites labeled 'E' also have predictions. But they are not as reliable to use for expected counts since the model is meant for areas in the genome not in essential eregions")
+print("#R2 value while predicting "+test_sample_name+" using an STLM model trained on "+train_sample_name+" : "+str(r2score))
 data = raw_test_data.to_csv(header=True, index=False).split('\n')
 vals = '\n'.join(data)
 print(vals)

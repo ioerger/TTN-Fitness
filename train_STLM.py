@@ -15,9 +15,7 @@ python3 tetranucl.csv pickleFileLoc(must have .pickle at the end) > TTN_descr.tx
 1. Read in the TTN csv and filter out essential sites
 2. Perform 10 fold cross validation to train and test the model
 3. Print details about the TTN coefs 
-3. Plot predict vs. actual LFC
-4. Plot the STLM coef vs. mean LFC per TTN
-5. Train the regression model on all the data and save it to the pickle file and then tar it
+4. Train the regression model on all the data and save it to the pickle file and then tar it 
 '''
 ####################################################################################
 # read in file 
@@ -53,6 +51,10 @@ X = sm.add_constant(X)
 final_model = sm.OLS(y,X).fit()
 results.save(sys.argv[2],remove_data=True)
 
+
+############################################################################################################
+#                      OUTPUT TO FILES
+############################################################################################################
 #tar the file to save space
 import tarfile
 tar = tarfile.open(sys.argv[2]+".tar.gz", "w:gz")
@@ -75,54 +77,3 @@ print("Tetra-nucleotide"+"\t"+"STLM Coefficient"+"\t"+"Number of times observed"
 for val in sorted(combo_coef.items(), key=lambda x: x[1], reverse=True):
         print(str(val[0])+"\t"+str(val[1][0])+"\t"+str(val[1][1]))
 
-#####################################################################################################################
-#                                      FIGURES
-#####################################################################################################################
-
-#Predicted vs. Actual LFC of the final cross-validation train-test split
-fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
-fig.suptitle("Testing trained STLM model of: "+str(sample_name))
-ax1.set_title("Predicted vs. Actual LFC")
-ax1.scatter(y_test,y_pred,s=1,c='green',alpha=0.5)
-ax1.set_xlabel('Actual')
-ax1.set_ylabel('Predicted')
-ax1.text(-7, 7, "R2: "+ str(sum(R2_list) / len(R2_list)), fontsize=10) #R2 is average of the R2 values from the cross-validation train-test split
-ax1.axhline(y=0, color='k')
-ax1.axvline(x=0, color='k')
-ax1.plot([-8,8], [-8,8], 'k--', alpha=0.75, zorder=1)
-ax1.set_xlim(-8,8)
-ax1.set_ylim(-8,8)
-ax1.grid(zorder=0)
-
-#STLM Coef vs. meanLFcs per TTN plot
-fig, (ax1) = plt.subplots(1, sharex=True, sharey=True)
-fig.suptitle(str(sample_name)+ " TetraNucl MeanCount-STLM Coefficent Correlation")
-ax1.scatter(c_averages,results.params[1:],s=5,c='green',alpha=0.75)
-ax1.set_xlabel('LFC Average')
-ax1.set_ylabel('STLM Coefficents')
-ax1.axhline(y=0, color='k')
-ax1.axvline(x=0, color='k')
-ax1.plot([-3,3], [-3,3], 'k--', alpha=0.25, zorder=1)
-ax1.grid(zorder=0)
-
-
-from statsmodels.stats.multitest import fdrcorrection
-Models_pvalues = pd.DataFrame(results.pvalues[1:],columns=["Pvalues"])
-Models_pvalues["Coef"] = results.params[1:]
-Models_pvalues["Adjusted Pvalues"] = fdrcorrection(results.pvalues[1:],alpha=0.05)[1]
-insig_models_pval = Models_pvalues[Models_pvalues["Adjusted Pvalues"]>0.05]
-
-#Coef Plot
-fig, ax = plt.subplots(figsize=(40,5))
-x = np.arange(256)
-ax.bar(x,results.params[1:])
-ax.plot([0,256], [insig_models_pval["Coef"].min(), insig_models_pval["Coef"].min()], "k--")
-ax.plot([0,256], [insig_models_pval["Coef"].max(), insig_models_pval["Coef"].max()], "k--")
-ax.set_xticks(range(256))
-ax.set_xticklabels(results.params[1:].index, rotation=90)
-ax.set_title("Coefficients from STLM Model")
-ax.set_xlabel("Tetranucleotides")
-ax.set_ylabel("Ceofficient")
-ax.grid(True)
-
-plt.show()
