@@ -7,8 +7,10 @@ The input files are wig files containing the insertion counts at TA site coordin
 
 ** Fitness estimation
 ** add sentence about how the model is used to categorize the genes passed in into the four categories. Specificify cirteria and categories. 
+-> columns of output file. What do they mean? What is important in this. Sort by adjusted p-value, LFC, gene categories [metric -> Z-score, pvalue. Explain all that]
 
-
+** add in purpose of the other pre-processing scripts(computeLFC and LFCtoTTN)
+-> columns in the output files. 
 
 
 
@@ -34,8 +36,15 @@ python3 Fitness_Estimation.py <STLM output.csv> <annotation .prot_table> <output
 
 ==============================================================================================================================================
 ==============================================================================================================================================
+EXAMPLE WORKFLOW
+
+**per group of commands what are you doing? i.e pre-processing, training, etc. 
+
+
 
 ------------- Getting expected counts of abscessus ATCC-19977 using our trained STLM -------------------
+** mention where the model is
+
 python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/H37Rv_mean.wig > out/H37Rv_LFC.txt
 python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
 
@@ -46,6 +55,8 @@ python3 STLM_test.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv
 
 
 --------- Retraining STLM on abscessus --------------------
+** mention that if you want to train on new data
+
 python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig > out/abscessus_LFC.txt
 python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
 python3 STLM_train.py out/H37Rv_TTN.csv out/STLM_model_trained_on_abscessus.pickle 
