@@ -12,20 +12,22 @@ The input files are wig files containing the insertion counts at TA site coordin
 
 
 
-# TAInsertionPreferences
+####### RUNNING SCRIPTS ########################
+---- Pre-Processing files ----
+compute the LFCs from wig files and prot table 
+>python compute_LFCs.py <.fna file> <annotation .prot_table> <.wig file 1> <.wig file 2> <.wig file 3> ...<wig file n>  > <LFC file>
+
+create the tetra-nucleotide vectors at each TA site that will be used to train the STLM as well as used to calculate expected LFCs and expected counts at each TA site.
+>python3 LFCs_to_TTN.py <LFC file> > <TTN .csv>
 
 ---- Train STLM ----
 The STLM is a linear model trained on log-fold-changes (LFCs) of insertion counts of a sample dataset. It generates the coefficents for the tetra-nucleotides.
-
-python compute_LFCs.py <.fna file> <annotation .prot_table> <.wig file 1> <.wig file 2> <.wig file 3> ...<wig file n>  > <LFC file>
-python3 LFCs_to_TTN.py <LFC file> > <TTN .csv>
-python3 train_STLM.py <TTN .csv> <.pickle file to save to> #pickle file created wil tared
+>python3 train_STLM.py <TTN .csv> <.pickle file to save to> #pickle file created wil tared
 
 
 ---- Predict using STLM ---- 
 With a trained STLM, the expected count at each TA site accounting for surrounding nucleotides can be calculated for a given sample dataset.
-
-python3 predict_with_STLM.py <.pickle file without the tar.gz suffix> <train TTN .csv file> <test TTN .csv> > <output file to write the STLM predictions to> 
+>python3 predict_with_STLM.py <.pickle file without the tar.gz suffix> <train TTN .csv file> <test TTN .csv> > <output file to write the STLM predictions to> 
 
 
 --- Fitness Estimation ----
@@ -53,13 +55,13 @@ The output file contains the columns:
 	- Gumbel Fitness Calls -> calls made from transit's gumbel run
 	- TTN Fitness Calls -> calls made with the method in its entirity
 
-transit gumbel <comma-separated .wig files> <annotation .prot_table or GFF3> <output file> 
-python3 Fitness_Estimation.py <STLM output.csv> <annotation .prot_table> <output gumbel file> > <output file to save Gene Essentiality predictions>
+>transit gumbel <comma-separated .wig files> <annotation .prot_table or GFF3> <output file> 
+>python3 Fitness_Estimation.py <STLM output.csv> <annotation .prot_table> <output gumbel file> > <output file to save Gene Essentiality predictions>
 
 
-==============================================================================================================================================
-==============================================================================================================================================
-EXAMPLE WORKFLOW
+===============================================================================
+                             EXAMPLE WORKFLOW
+===============================================================================
 
 **per group of commands what are you doing? i.e pre-processing, training, etc. 
 
@@ -68,25 +70,25 @@ EXAMPLE WORKFLOW
 ------------- Getting expected counts of abscessus ATCC-19977 using our trained STLM -------------------
 ** mention where the model is
 
-python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/H37Rv_mean.wig > out/H37Rv_LFC.txt
-python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
+>python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/H37Rv_mean.wig > out/H37Rv_LFC.txt
+>python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
 
-python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/*.wig > out/abscessus_LFC.txt
-python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > out/H37Rv_TTN.csv
-python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
-python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv_TTN.csv out/abscessus_TTN.csv > out/abscessus_STLM_predictions.csv
+>python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/*.wig > out/abscessus_LFC.txt
+>python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > out/H37Rv_TTN.csv
+>python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
+>python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv_TTN.csv out/abscessus_TTN.csv > out/abscessus_STLM_predictions.csv
 
 
 --------- Retraining STLM on abscessus --------------------
 ** mention that if you want to train on new data
 
-python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig > out/abscessus_LFC.txt
-python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
-python3 train_STLM.py out/H37Rv_TTN.csv out/STLM_model_trained_on_abscessus.pickle 
+>python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig > out/abscessus_LFC.txt
+>python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
+>python3 train_STLM.py out/H37Rv_TTN.csv out/STLM_model_trained_on_abscessus.pickle 
 
 --------- Estimating Fitness of genes in H37Rv (with HMM+NP) ----------------
-transit gumbel <comma seperaated list of wig files in demodata/H37Rv> demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv
-python3 Fitness_Estimation.py out/STLM_H37Rv_predictions.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv > Fitness_Estimation_of_H37Rv_genes.csv
+>transit gumbel <comma seperaated list of wig files in demodata/H37Rv> demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv
+>python3 Fitness_Estimation.py out/STLM_H37Rv_predictions.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv > Fitness_Estimation_of_H37Rv_genes.csv
 
 
 
