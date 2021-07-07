@@ -76,12 +76,12 @@ Get expected counts of TA sites in H37Rv using the STLM trained on H37Rv. Using 
 
 The following commands should be run from the main directory. They generate files in a folder labeled 'out' in the main directory. 
 
->python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
+>python compute_LFCs.py demodata/H37Rv/H37RvBD1.fna demodata/H37Rv/H37RvBD1.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
 >python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > out/H37Rv_TTN.csv
 
->transit gumbel demodata/H37Rv/Cara_WT.wig,demodata/H37Rv/CS_TraCS053.wig,demodata/H37Rv/CS_TraCS054.wig,demodata/H37Rv/WT1_SWP.wig,demodata/H37Rv/WT2_SWP.wig,demodata/H37Rv/WT3_SWP.wig,demodata/H37Rv/WT4_SWP.wig,demodata/H37Rv/WT5_SWP.wig,demodata/H37Rv/WT6_SWP.wig,demodata/H37Rv/WT7_SWP.wig,demodata/H37Rv/WX_WT1.wig,demodata/H37Rv/WX_WT2.wig,demodata/H37Rv/WX_WT3.wig,demodata/H37Rv/WX_WT4.wig demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv
+>transit gumbel demodata/H37Rv/Cara_WT.wig,demodata/H37Rv/CS_TraCS053.wig,demodata/H37Rv/CS_TraCS054.wig,demodata/H37Rv/WT1_SWP.wig,demodata/H37Rv/WT2_SWP.wig,demodata/H37Rv/WT3_SWP.wig,demodata/H37Rv/WT4_SWP.wig,demodata/H37Rv/WT5_SWP.wig,demodata/H37Rv/WT6_SWP.wig,demodata/H37Rv/WT7_SWP.wig,demodata/H37Rv/WX_WT1.wig,demodata/H37Rv/WX_WT2.wig,demodata/H37Rv/WX_WT3.wig,demodata/H37Rv/WX_WT4.wig demodata/H37Rv/H37RvBD1.prot_table out/H37Rv_gumbel_gene_predictions.csv
 >python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv_TTN.csv out/H37Rv_TTN.csv > out/H37Rv_expected_counts.csv
->python3 Fitness_Estimation.py out/STLM_H37Rv_predictions.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv > out/Fitness_Estimation_of_H37Rv_genes.csv
+>python3 Fitness_Estimation.py out/STLM_H37Rv_predictions.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/H37Rv/H37RvBD1.prot_table out/H37Rv_gumbel_gene_predictions.csv > out/Fitness_Estimation_of_H37Rv_genes.csv
 
 
 ------------- Getting fitness estimation of genes in abscessus ATCC-19977 using our trained STLM -------------------
@@ -91,7 +91,7 @@ Using our STLM, trained on the H37Rv, get expected insertion counts at TA sites 
 
 The following commands should be run from the main directory. They generate files in a folder labeled 'out' in the main directory  
 
->python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
+>python compute_LFCs.py demodata/H37Rv/H37RvBD1.fna demodata/H37Rv/H37RvBD1.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
 >python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/*.wig > out/abscessus_LFC.txt
 >python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > out/H37Rv_TTN.csv
 >python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv

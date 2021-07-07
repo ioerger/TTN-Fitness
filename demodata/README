@@ -1,18 +1,22 @@
-1. For any new dataset, there are three important files:
-  a. wig files which contain the counts at coordinates of TA sites
-      i. for H37Rv, there are 14 different wigs to represetn datasets from independent libraries, like WX1.wig, Cara.wig, etc.,
-      ii. FORMAT : coordinate <space> count 
-  b. the genome sequence itself (FastA file, its critical that the coordinates are taken from the same version of the genome provided here)
-      i. H37RvBD1.fna [make sure file has this name too]. (Ascession Number her NC_0001 something like that)
-  c. the genome annotation (prot_table. Critical to be same)
-      i. H37RvBD1.prot_table
-      ii. Tabseperated, without header. Columns are: 
-        1. descriptions
-        2. start coord
-        3. end coord
-        4. strand
-        5. protein length in amino acids
-        6. dont care [variable X]
-        7. dont care [vaiable Y]
-        8. ORF name
-        9. ORF ID
+For a new dataset, three types of files are required:
+	1. wig Files -> files that contain the insertion counts at coordinates at TA sites 
+		a. for the H37Rv dataset, there are 14 different wig files to represent the dataset from independent libraries. For example, WX_WT1.wig, Cara_WT.wig, etc.
+		b. each new line in the wig file is : TA site coordinate <space> insertion count 
+	2. fastA File -> file that contains the genome sequence itself
+		a. in the H37Rv dataset, the genome sequence is in the H37RvBD1.fna file [Aceession Number: NC_018143.1]
+		b. It is critical that coordinates for the insertion counts in the wig files are taken from the same genome version as provided in this fastA file
+	3. Annotation File -> a file that contains information related to the genes for the genome provided
+		a. in the H37Rv dataset, this is the H37RvBD1.prot_table 
+		b. this file must contain information obtained from the same version of the genome provided in the wig files and the fastA file.
+		c. this is a tab-seperated file, with the columns:
+			i. descriptions
+        		ii. start coord
+        		iii. end coord
+        		iv. strand
+        		v. protein length in amino acids
+        		vi. dont care [variable X]
+        		vii. dont care [vaiable Y]
+        		viii. ORF name
+        		ix. ORF ID
+
+
