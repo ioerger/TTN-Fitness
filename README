@@ -1,24 +1,28 @@
 This software is an implementation of an algorithm for predicting insertion counts based on nucleotide patterns surrounfign TA dinulceotide sites using the Himar1 transposon
 The input files are wig files containing the insertion counts at TA site coordinates in a bacterial genome. It generates an output of essentiality of genes based on comparing observed counts to expected counts
 
-** Fitness estimation
-** add sentence about how the model is used to categorize the genes passed in into the four categories. Specificify cirteria and categories. 
--> columns of output file. What do they mean? What is important in this. Sort by adjusted p-value, LFC, gene categories [metric -> Z-score, pvalue. Explain all that]
+################# SCRIPTS ########################
+---- Pre-Processing ----
 
-** add in purpose of the other pre-processing scripts(computeLFC and LFCtoTTN)
--> columns in the output files. 
+With wig files and a prot table that matches the genome used to create the wig files, compute the LFCs. The output file does not contain headers. The columns are:
+	- TA site coordinate
+	- ORF ID at this coordinate 
+	- ORF Name of the ORF ID at this coordinate
+	- Nucleotides in postions -20 to +20 from the TA site, including the TA dinucleotide itself.
+	- State of the TA site. 
+		-> 'E' : if TA site is in a region of 6 or more consecutive sites with 2 or less insertions
+		-> 'NE': otherwise
+	- mean insertion count at TA site coordinate across wig files prvided
+	- LFC at the TA site, using insertion counts at surrounding TA sites 
+	- Description of the ORF at this coordinate
 
-
-
-
-
-####### RUNNING SCRIPTS ########################
----- Pre-Processing files ----
-compute the LFCs from wig files and prot table 
 >python compute_LFCs.py <.fna file> <annotation .prot_table> <.wig file 1> <.wig file 2> <.wig file 3> ...<wig file n>  > <LFC file>
 
-create the tetra-nucleotide vectors at each TA site that will be used to train the STLM as well as used to calculate expected LFCs and expected counts at each TA site.
+
+We create the tetra-nucleotide vectors at each TA site that will be used to train the STLM and calculate expected LFCs/expected counts. The output file contains headers. They contain columns in the LFC file generated in the previous step, expect instead one column with "Nucleotides in postions -20 to +20 from the TA site", the file contains columns of binary values of whether the tetranucleotides exist at TA sites at specific coordinates. 
+
 >python3 LFCs_to_TTN.py <LFC file> > <TTN .csv>
+
 
 ---- Train STLM ----
 The STLM is a linear model trained on log-fold-changes (LFCs) of insertion counts of a sample dataset. It generates the coefficents for the tetra-nucleotides.
@@ -46,8 +50,8 @@ The output file contains the columns:
 	- Number of TA sites in the ORF with insertions
 	- Gene-Only Model(M0) Coeffients
 	- Gene-Only Model (M0) Pvals (FDR-Adjusted)
-	- Gene+TTN Model (M1) Coefficents
-	- Gene+TTN Model (M1) Pvals (FDR-Adjusted)
+	- Gene+TTN Model (M1) Coefficents -> these values are used to categorize genes when adjusted pval < 0.05
+	- Gene+TTN Model (M1) Pvals (FDR-Adjusted) -> values can be sorted in increasing order and those greater than 0.05 are marked 'NE' by the TTN-Fitness
 	- Coefficient Difference in M1 and M0
 	- Pval of the Coefficient Difference
 	- Mean Predicted STLM Count -> Caution for genes that have multiple sites marked essential in initial pre-processing
@@ -60,35 +64,51 @@ The output file contains the columns:
 
 
 ===============================================================================
-                             EXAMPLE WORKFLOW
+                             EXAMPLE WORKFLOWS
 ===============================================================================
 
-**per group of commands what are you doing? i.e pre-processing, training, etc. 
+--------------- Get Estimated Fitness of genes in H37Rv --------------------
+Get expected counts of TA sites in H37Rv using the STLM trained on H37Rv. Using these expected counts, estimate fitness of genes in the H37Rv
+	1. Obtain LFC data and tetranucleotide vectors for H37Rv
+	2. Run Transit Gumbel for the H37Rv data
+	3. Get expected counts at TA sites in H37Rv
+	4. Using Gumbel and expected counts of H37Rv, get fitness estimate for genes in H37Rv
 
+The following commands should be run from the main directory. They generate files in a folder labeled 'out' in the main directory. 
 
-
-------------- Getting expected counts of abscessus ATCC-19977 using our trained STLM -------------------
-** mention where the model is
-
->python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/H37Rv_mean.wig > out/H37Rv_LFC.txt
 >python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
+>python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > out/H37Rv_TTN.csv
 
+>transit gumbel demodata/H37Rv/Cara_WT.wig,demodata/H37Rv/CS_TraCS053.wig,demodata/H37Rv/CS_TraCS054.wig,demodata/H37Rv/WT1_SWP.wig,demodata/H37Rv/WT2_SWP.wig,demodata/H37Rv/WT3_SWP.wig,demodata/H37Rv/WT4_SWP.wig,demodata/H37Rv/WT5_SWP.wig,demodata/H37Rv/WT6_SWP.wig,demodata/H37Rv/WT7_SWP.wig,demodata/H37Rv/WX_WT1.wig,demodata/H37Rv/WX_WT2.wig,demodata/H37Rv/WX_WT3.wig,demodata/H37Rv/WX_WT4.wig demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv
+>python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv_TTN.csv out/H37Rv_TTN.csv > out/H37Rv_expected_counts.csv
+>python3 Fitness_Estimation.py out/STLM_H37Rv_predictions.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv > out/Fitness_Estimation_of_H37Rv_genes.csv
+
+
+------------- Getting fitness estimation of genes in abscessus ATCC-19977 using our trained STLM -------------------
+Using our STLM, trained on the H37Rv, get expected insertion counts at TA sites in abscessus ATCC 19977:
+	1. Obtain LFC data and tetranucleotide vectors for both H37Rv and abscessus
+	2. Using the STLM already trained on H37Rv, calculate expected counts of absessus
+
+The following commands should be run from the main directory. They generate files in a folder labeled 'out' in the main directory  
+
+>python compute_LFCs.py demodata/H37Rv/H37Rv.fna demodata/H37Rv/H37Rv.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
 >python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/*.wig > out/abscessus_LFC.txt
 >python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > out/H37Rv_TTN.csv
 >python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
->python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv_TTN.csv out/abscessus_TTN.csv > out/abscessus_STLM_predictions.csv
+
+
+>python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv_TTN.csv out/abscessus_TTN.csv > out/abscessus_expected_counts.csv
+>transit gumbel demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig,demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig,demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig demodata/abscessus/ATCC_19977/abscessus.prot_table out/abscessus_gumbel_gene_predictions.csv
+>python3 Fitness_Estimation.py out/abscessus_expected_counts.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/abscessus/ATCC_19977/abscessus.prot_table out/abscessus_gumbel_gene_predictions.csv > out/Fitness_Estimation_of_abscessus_ATCC_19977_genes.csv
 
 
 --------- Retraining STLM on abscessus --------------------
-** mention that if you want to train on new data
+Train a new STLM using the abscessus ATCC-19977 data:
+	1. Obtain LFC data and tetranucleotide vectors for the abscessus ATCC-19977
+	2. Train a new STLM using the abscessus TTN vectors and LFCs 
+
+The following commands should be run from the main directory. They generate files in a folder labeled 'out' in the main directory
 
 >python compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig > out/abscessus_LFC.txt
 >python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
 >python3 train_STLM.py out/H37Rv_TTN.csv out/STLM_model_trained_on_abscessus.pickle 
-
---------- Estimating Fitness of genes in H37Rv (with HMM+NP) ----------------
->transit gumbel <comma seperaated list of wig files in demodata/H37Rv> demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv
->python3 Fitness_Estimation.py out/STLM_H37Rv_predictions.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/H37Rv/H37Rv.prot_table out/H37Rv_gumbel_gene_predictions.csv > Fitness_Estimation_of_H37Rv_genes.csv
-
-
-
