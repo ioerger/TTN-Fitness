@@ -10,7 +10,7 @@ import math
 import itertools
 
 """
-python3 STLM_test.py model.pickle trainTTN.csv testTTN.csv > predictions.csv
+python3 predict_with_STLM.py model.pickle trainTTN.csv testTTN.csv > predictions.csv
 
 1. Load in model from the pickle file
 2. Load in the csv
