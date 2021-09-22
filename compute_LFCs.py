@@ -1,5 +1,5 @@
 """
-Command: python compute_LFCs.py genome.fna genome.prot_table <list of counts.wig files> > genome_LFCs.txt
+Command: python333 compute_LFCs.py genome.fna genome.prot_table <list of counts.wig files> > genome_LFCs.txt
 
 1. load in the fna file as one long string of characters, load in genes description from the prottable, read in wig files and combine them into parallel array matching Coords and corresponding counts in the wig files
 2. Get average normalized counts per TA site from wig files
@@ -120,5 +120,5 @@ for i in range(Nsites):
   descr = "igr" if gene==None else "%s"%(gene[5])
   lfc = math.log((c+PC)/float(m+PC),2)
   vals = [coords[i],orfid,orfName,nucs[i],states[i],round(c,1),round(m,1),round(lfc,3),descr]
-  print '\t'.join([str(x) for x in vals])
+  print ('\t'.join([str(x) for x in vals]))
 
