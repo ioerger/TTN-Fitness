@@ -46,7 +46,7 @@ saturation = len(ttn_data[ttn_data["Count"]>0])/len(ttn_data)
 phi = 1.0 - saturation
 significant_n = math.log10(0.05)/math.log10(phi)
 
-def gumbel_bernoulli_calls(data_df):
+def gumbel_binomial_calls(data_df):
 	calls = []
 	for g in data_df["ORF ID"].unique():
 		gene_call='U'
@@ -64,15 +64,15 @@ def calcPredictedCounts(row):
 
 ttn_data["Predicted Count"]=ttn_data.apply(calcPredictedCounts,axis=1)
 ttn_data= ttn_data[ttn_data["ORF ID"]!="igr"]
-ttn_data["Gumbel/Bernoulli Call"] = gumbel_bernoulli_calls(ttn_data)
-filtered_ttn_data = ttn_data[ttn_data["Gumbel/Bernoulli Call"]!="E"]
-filtered_ttn_data= filtered_ttn_data[filtered_ttn_data["Gumbel/Bernoulli Call"]!="EB"]
+ttn_data["Gumbel/Binomial Call"] = gumbel_bernoulli_calls(ttn_data)
+filtered_ttn_data = ttn_data[ttn_data["Gumbel/Binomial Call"]!="E"]
+filtered_ttn_data= filtered_ttn_data[filtered_ttn_data["Gumbel/Binomial Call"]!="EB"]
 filtered_ttn_data = filtered_ttn_data.reset_index(drop=True)
 
 ##########################################################################################
 #Linear Regression
 gene_one_hot_encoded= pd.get_dummies(filtered_ttn_data["ORF ID"],prefix='')
-ttn_vectors = filtered_ttn_data.drop(["Pred LFC","Corrected Pred LFC","Corrected LFC","Predicted Count","Coord","Count","ORF ID","ORF Name","Local Mean","LFC","State", "Gumbel/Bernoulli Call"],axis=1)
+ttn_vectors = filtered_ttn_data.drop(["Pred LFC","Corrected Pred LFC","Corrected LFC","Predicted Count","Coord","Count","ORF ID","ORF Name","Local Mean","LFC","State", "Gumbel/Binomial Call"],axis=1)
 
 X0 = pd.concat([gene_one_hot_encoded],axis=1)
 X0 = sm.add_constant(X0)
@@ -101,9 +101,7 @@ Models_df["M0 Adjusted Pval"] = statsmodels.stats.multitest.fdrcorrection(result
 Models_df["M1 Coef"]= results1.params[1:-256]
 Models_df["M1 Pval"] = results1.pvalues[1:-256]
 Models_df["M1 Adjusted Pval"] = statsmodels.stats.multitest.fdrcorrection(results1.pvalues[1:-256],alpha=0.05)[1]
-Models_df["Coef Diff (M1-M0)"] = Models_df["M1 Coef"] - Models_df["M0 Coef"]
 #creating a mask for the adjusted pvals
-
 Models_df.loc[(Models_df["M1 Coef"]>0) & (Models_df["M1 Adjusted Pval"]<0.05),"Gene+TTN States"]="GA"
 Models_df.loc[(Models_df["M1 Coef"]<0) & (Models_df["M1 Adjusted Pval"]<0.05),"Gene+TTN States"]="GD"
 Models_df.loc[(Models_df["M1 Coef"]==0) & (Models_df["M1 Adjusted Pval"]<0.05),"Gene+TTN States"]="NE"
@@ -123,16 +121,16 @@ for g in ttn_data["ORF ID"].unique():
 	numTAsites = len(ttn_data[ttn_data["ORF ID"]==g])
 	#Sites > 0
 	above0TAsites = len(ttn_data[(ttn_data["ORF ID"]==g) & (ttn_data["Count"]>0)])
-	#Predicted Count
-	if g not in ttn_data["ORF ID"].values or ttn_data[ttn_data["ORF ID"]==g]["State"].iloc[0]=="ES": 
-		M0_pred_counts=None
-		M1_pred_counts = None
-	else: 
-		M0_pred_counts = np.mean(filtered_ttn_data[filtered_ttn_data["ORF ID"]==g]["M0 Predicted Count"])
-		M1_pred_counts = np.mean(filtered_ttn_data[filtered_ttn_data["ORF ID"]==g]["M0 Predicted Count"])
 	#Actual Count
 	actual_counts = ttn_data[ttn_data["ORF ID"]==g]["Count"]
 	mean_actual_counts = np.mean(actual_counts)
+	#Predicted Count
+	if g not in ttn_data["ORF ID"].values or ttn_data[ttn_data["ORF ID"]==g]["State"].iloc[0]=="ES": 
+		M0_ratio=None
+		M1_ratio = None
+	else: 
+		M0_ratio = np.log10(np.mean(filtered_ttn_data[filtered_ttn_data["ORF ID"]==g]["M0 Predicted Count"])/mean_actual_counts)
+		M1_ratio = np.log10(np.mean(filtered_ttn_data[filtered_ttn_data["ORF ID"]==g]["M0 Predicted Count"])/mean_actual_counts)
 	#M0/M1 info
 	if "_"+g in Models_df.index:
 		used=True
@@ -140,7 +138,6 @@ for g in ttn_data["ORF ID"].unique():
 		M0_adj_pval = Models_df.loc["_"+g,"M0 Adjusted Pval"]
 		M1_coef = Models_df.loc["_"+g,"M1 Coef"]
 		M1_adj_pval = Models_df.loc["_"+g,"M1 Adjusted Pval"]
-		coef_diff = Models_df.loc["_"+g,"Coef Diff (M1-M0)"] 
 		
 	else:
 		used=False
@@ -148,18 +145,17 @@ for g in ttn_data["ORF ID"].unique():
 		M0_adj_pval = None
 		M1_coef = None
 		M1_adj_pval = None
-		coef_diff = None 
 	#States
-	gumbel_bernoulli_call = ttn_data[ttn_data["ORF ID"]==g]["Gumbel/Bernoulli Call"].iloc[0]	
+	gumbel_bernoulli_call = ttn_data[ttn_data["ORF ID"]==g]["Gumbel/Binomial Call"].iloc[0]	
 	if gumbel_bernoulli_call=="E": gene_ttn_call = "ES"
 	elif gumbel_bernoulli_call=="EB": gene_ttn_call = "ESB"
 	else:
 		if "_"+g in Models_df.index: gene_ttn_call = Models_df.loc["_"+g,"Gene+TTN States"]
 		else: gene_ttn_call = "Uncertain"
-	gene_dict[g] = [g,orfName,orfDescription,numTAsites,above0TAsites,used,M0_coef,M0_adj_pval,M1_coef,M1_adj_pval,coef_diff,M0_pred_counts,M1_pred_counts,mean_actual_counts,gene_ttn_call]
+	gene_dict[g] = [g,orfName,orfDescription,numTAsites,above0TAsites,used,M0_coef,M0_adj_pval,M1_coef,M1_adj_pval,M0_ratio,M1_ratio,mean_actual_counts,gene_ttn_call]
 
 gene_df = pd.DataFrame.from_dict(gene_dict,orient='index')
-gene_df.columns=["ORF ID","Name","Description","Total # TA Sites","#Sites with insertions","Used in Models","Gene (M0) Coef","Gene (M0) Adj Pval","Gene+TTN (M1) Coef","Gene+TTN (M1) Adj Pval","Coef Diff (M1-M0)","Mean Count Expected by M0","Mean Count Expected by M1","Mean Actual Count", "TTN-Fitness Assesment"]
+gene_df.columns=["ORF ID","Name","Description","Total # TA Sites","#Sites with insertions","Used in Models","Gene (M0) Coef","Gene (M0) Adj Pval","Gene+TTN (M1) Coef","Gene+TTN (M1) Adj Pval","M0 Fitness Estimation","M1 Fitness Estimation","Mean Actual Count", "TTN-Fitness Assesment"]
 #print(gene_df)
 
 

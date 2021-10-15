@@ -19,4 +19,9 @@ For a new dataset, three types of files are required:
         		viii. ORF name
         		ix. ORF ID
 
-
+Out Folder: example output files from example flow of the scripts[see README in main folder]
+	1. H37Rv_LFC.txt -> LFCs calculated for H37Rv from the 14 wig files in demodata/H37Rv
+	2. H37Rv_TTN.csv -> For every TA site listed in LFCs,convert into 256-bit vectors of tetranucleotides.
+	3. H37Rv_gumbel_gene_predictions.csv -> get gumbel predictions of H37Rv using TRANSIT
+	4. H37Rv_expected_counts.csv -> The expected counts per TA site by TTN bias, using the STLM model
+	5. Fitness_Estimation_of_H37Rv.csv -> Run of the TTN-Fitness method to determine fitness defects of the genes within the H37Rv genome  

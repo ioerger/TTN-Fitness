@@ -52,9 +52,16 @@ The output file contains the columns:
 	- Gene-Only Model (M0) Pvals (FDR-Adjusted)
 	- Gene+TTN Model (M1) Coefficents -> these values are used to categorize genes when adjusted pval < 0.05
 	- Gene+TTN Model (M1) Pvals (FDR-Adjusted) -> values can be sorted in increasing order and those greater than 0.05 are marked 'NE' by the TTN-Fitness
-	- Coefficient Difference in M1 and M0
-	- Pval of the Coefficient Difference
-	- Mean Predicted STLM Count -> Caution for genes that have multiple sites marked essential in initial pre-processing
+	- M0 Fitness Estimation -> log (Counts expected by M0/Counts Observed). Ratio of expected to actual counts of genes using M0.
+		- None -> Gene was essential
+		- < 1 -> GD
+		- = 1 -> NE
+		- > 1 -> GA
+	- M1 Fitness Estimation -> log (Counts expected by M1/Counts Observed). Ratio of expected to actual counts of genes using M1.	
+	        - None -> Gene was essential
+                - < 1 -> GD
+                - = 1 -> NE
+                - > 1 -> GA
 	- Mean Actual Count
 	- Gumbel Fitness Calls -> calls made from transit's gumbel run
 	- TTN Fitness Calls -> calls made with the method in its entirity
@@ -76,12 +83,12 @@ Get expected counts of TA sites in H37Rv using the STLM trained on H37Rv. Using 
 
 The following commands should be run from the main directory. They generate files in a folder labeled 'out' in the main directory. 
 
->python3 compute_LFCs.py demodata/H37Rv/H37RvBD1.fna demodata/H37Rv/H37RvBD1.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
->python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > out/H37Rv_TTN.csv
+>python3 compute_LFCs.py demodata/H37Rv/H37RvBD1.fna demodata/H37Rv/H37RvBD1.prot_table demodata/H37Rv/*.wig > demodata/out/H37Rv_LFC.txt
+>python3 LFCs_to_TTN.py demodata/out/H37Rv_LFC.txt > demodata/out/H37Rv_TTN.csv
 
->transit gumbel demodata/H37Rv/Cara_WT.wig,demodata/H37Rv/CS_TraCS053.wig,demodata/H37Rv/CS_TraCS054.wig,demodata/H37Rv/WT1_SWP.wig,demodata/H37Rv/WT2_SWP.wig,demodata/H37Rv/WT3_SWP.wig,demodata/H37Rv/WT4_SWP.wig,demodata/H37Rv/WT5_SWP.wig,demodata/H37Rv/WT6_SWP.wig,demodata/H37Rv/WT7_SWP.wig,demodata/H37Rv/WX_WT1.wig,demodata/H37Rv/WX_WT2.wig,demodata/H37Rv/WX_WT3.wig,demodata/H37Rv/WX_WT4.wig demodata/H37Rv/H37RvBD1.prot_table out/H37Rv_gumbel_gene_predictions.csv
->python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv_TTN.csv out/H37Rv_TTN.csv > out/H37Rv_expected_counts.csv
->python3 Fitness_Estimation.py out/STLM_H37Rv_predictions.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/H37Rv/H37RvBD1.prot_table out/H37Rv_gumbel_gene_predictions.csv > out/Fitness_Estimation_of_H37Rv_genes.csv
+>transit gumbel demodata/H37Rv/Cara_WT.wig,demodata/H37Rv/CS_TraCS053.wig,demodata/H37Rv/CS_TraCS054.wig,demodata/H37Rv/WT1_SWP.wig,demodata/H37Rv/WT2_SWP.wig,demodata/H37Rv/WT3_SWP.wig,demodata/H37Rv/WT4_SWP.wig,demodata/H37Rv/WT5_SWP.wig,demodata/H37Rv/WT6_SWP.wig,demodata/H37Rv/WT7_SWP.wig,demodata/H37Rv/WX_WT1.wig,demodata/H37Rv/WX_WT2.wig,demodata/H37Rv/WX_WT3.wig,demodata/H37Rv/WX_WT4.wig demodata/H37Rv/H37RvBD1.prot_table demodata/out/H37Rv_gumbel_gene_predictions.csv
+>python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle demodata/out/H37Rv_TTN.csv demodata/out/H37Rv_TTN.csv > demodata/out/H37Rv_expected_counts.csv
+>python3 Fitness_Estimation.py demodata/out/H37Rv_expected_counts.csv demodata/H37Rv/H37RvBD1.prot_table demodata/out/H37Rv_gumbel_gene_predictions.csv > demodata/out/Fitness_Estimation_of_H37Rv_genes.csv
 
 
 ------------- Getting fitness estimation of genes in abscessus ATCC-19977 using our trained STLM -------------------
@@ -91,15 +98,15 @@ Using our STLM, trained on the H37Rv, get expected insertion counts at TA sites 
 
 The following commands should be run from the main directory. They generate files in a folder labeled 'out' in the main directory  
 
->python3 compute_LFCs.py demodata/H37Rv/H37RvBD1.fna demodata/H37Rv/H37RvBD1.prot_table demodata/H37Rv/*.wig > out/H37Rv_LFC.txt
->python3 compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/*.wig > out/abscessus_LFC.txt
->python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > out/H37Rv_TTN.csv
->python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
+>python3 compute_LFCs.py demodata/H37Rv/H37RvBD1.fna demodata/H37Rv/H37RvBD1.prot_table demodata/H37Rv/*.wig > demodata/out/H37Rv_LFC.txt
+>python3 compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/*.wig > demodata/out/abscessus_LFC.txt
+>python3 LFCs_to_TTN.py out/H37Rv_LFC.txt > demodata/out/H37Rv_TTN.csv
+>python3 LFCs_to_TTN.py out/abscessus_LFC.txt > demodata/out/abscessus_TTN.csv
 
 
->python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle out/H37Rv_TTN.csv out/abscessus_TTN.csv > out/abscessus_expected_counts.csv
->transit gumbel demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig,demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig,demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig demodata/abscessus/ATCC_19977/abscessus.prot_table out/abscessus_gumbel_gene_predictions.csv
->python3 Fitness_Estimation.py out/abscessus_expected_counts.csv demodata/STLM_model_trained_on_H37Rv.pickle demodata/abscessus/ATCC_19977/abscessus.prot_table out/abscessus_gumbel_gene_predictions.csv > out/Fitness_Estimation_of_abscessus_ATCC_19977_genes.csv
+>python3 predict_with_STLM.py demodata/H37Rv/STLM_model_trained_on_H37Rv.pickle demodata/out/H37Rv_TTN.csv demodata/out/abscessus_TTN.csv > demodata/out/abscessus_expected_counts.csv
+>transit gumbel demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig,demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig,demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig demodata/abscessus/ATCC_19977/abscessus.prot_table demodata/out/abscessus_gumbel_gene_predictions.csv
+>python3 Fitness_Estimation.py out/abscessus_expected_counts.csv demodata/abscessus/ATCC_19977/abscessus.prot_table demodata/out/abscessus_gumbel_gene_predictions.csv > demodata/out/Fitness_Estimation_of_abscessus_ATCC_19977_genes.csv
 
 
 --------- Retraining STLM on abscessus --------------------
@@ -109,6 +116,6 @@ Train a new STLM using the abscessus ATCC-19977 data:
 
 The following commands should be run from the main directory. They generate files in a folder labeled 'out' in the main directory
 
->python3 compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig > out/abscessus_LFC.txt
->python3 LFCs_to_TTN.py out/abscessus_LFC.txt > out/abscessus_TTN.csv
->python3 train_STLM.py out/H37Rv_TTN.csv out/STLM_model_trained_on_abscessus.pickle 
+>python3 compute_LFCs.py demodata/abscessus/ATCC_19977/abscessus.fna demodata/abscessus/ATCC_1977/abscessus.prot_table demodata/abscessus/ATCC_19977/TnSeq-Ref-1.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-2.wig demodata/abscessus/ATCC_19977/TnSeq-Ref-3.wig > demodata/out/abscessus_LFC.txt
+>python3 LFCs_to_TTN.py demodata/out/abscessus_LFC.txt > demodata/out/abscessus_TTN.csv
+>python3 train_STLM.py demodata/out/H37Rv_TTN.csv demodata/out/STLM_model_trained_on_abscessus.pickle 
