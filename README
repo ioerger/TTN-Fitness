@@ -1,6 +1,7 @@
 This software is an implementation of an algorithm for predicting insertion counts based on nucleotide patterns surrounfign TA dinulceotide sites using the Himar1 transposon
 The input files are wig files containing the insertion counts at TA site coordinates in a bacterial genome. It generates an output of essentiality of genes based on comparing observed counts to expected counts
 
+Note: These scripts may have errors when run on MacOS
 ################# SCRIPTS ########################
 ---- Pre-Processing ----
 
