@@ -64,7 +64,7 @@ def calcPredictedCounts(row):
 
 ttn_data["Predicted Count"]=ttn_data.apply(calcPredictedCounts,axis=1)
 ttn_data= ttn_data[ttn_data["ORF ID"]!="igr"]
-ttn_data["Gumbel/Binomial Call"] = gumbel_bernoulli_calls(ttn_data)
+ttn_data["Gumbel/Binomial Call"] = gumbel_binomial_calls(ttn_data)
 filtered_ttn_data = ttn_data[ttn_data["Gumbel/Binomial Call"]!="E"]
 filtered_ttn_data= filtered_ttn_data[filtered_ttn_data["Gumbel/Binomial Call"]!="EB"]
 filtered_ttn_data = filtered_ttn_data.reset_index(drop=True)
@@ -130,7 +130,7 @@ for g in ttn_data["ORF ID"].unique():
 		M1_ratio = None
 	else: 
 		M0_ratio = np.log10(np.mean(filtered_ttn_data[filtered_ttn_data["ORF ID"]==g]["M0 Predicted Count"])/mean_actual_counts)
-		M1_ratio = np.log10(np.mean(filtered_ttn_data[filtered_ttn_data["ORF ID"]==g]["M0 Predicted Count"])/mean_actual_counts)
+		M1_ratio = np.log10(np.mean(filtered_ttn_data[filtered_ttn_data["ORF ID"]==g]["M1 Predicted Count"])/mean_actual_counts)
 	#M0/M1 info
 	if "_"+g in Models_df.index:
 		used=True
